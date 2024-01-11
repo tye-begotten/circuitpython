@@ -315,8 +315,8 @@ endif
 ifeq ($(CIRCUITPY_RAINBOWIO),1)
 SRC_PATTERNS += rainbowio/%
 endif
-ifeq ($(CIRCUITPY_RAMIO),1)
-SRC_PATTERNS += ramio/%
+ifeq ($(CIRCUITPY_RAMBUS),1)
+SRC_PATTERNS += rambus/%
 endif
 ifeq ($(CIRCUITPY_RANDOM),1)
 SRC_PATTERNS += random/%
@@ -502,8 +502,8 @@ SRC_COMMON_HAL_ALL = \
 	pulseio/__init__.c \
 	pwmio/PWMOut.c \
 	pwmio/__init__.c \
-	ramio/__init__.c \
-	ramio/RAM.c \
+	rambus/__init__.c \
+	rambus/RAM.c \
 	rgbmatrix/RGBMatrix.c \
 	rgbmatrix/__init__.c \
 	rotaryio/IncrementalEncoder.c \
@@ -674,8 +674,8 @@ SRC_SHARED_MODULE_ALL = \
 	qrio/__init__.c \
 	qrio/QRDecoder.c \
 	rainbowio/__init__.c \
-	ramio/__init__.c \
-	ramio/RAM.c \
+	rambus/__init__.c \
+	rambus/RAM.c \
 	random/__init__.c \
 	rgbmatrix/RGBMatrix.c \
 	rgbmatrix/__init__.c \

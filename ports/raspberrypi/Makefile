@@ -367,13 +367,13 @@ else
 OBJ_MBEDTLS :=
 endif
 
-SRC_SHARED_MODULE = ramio/__init__.c \
-                    ramio/RAM.c \
+SRC_SHARED_MODULE = rambus/__init__.c \
+                    rambus/RAM.c \
 
 
 SRC_BINDINGS = \
-	ramio/__init__.c \
-  ramio/RAM.c \
+	rambus/__init__.c \
+  rambus/RAM.c \
 
 SRC_BINDINGS_EXPANDED = $(addprefix shared-bindings/, $(SRC_BINDINGS)) \
                         $(addprefix common-hal/, $(SRC_BINDINGS))

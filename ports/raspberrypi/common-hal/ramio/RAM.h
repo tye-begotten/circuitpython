@@ -1,4 +1,4 @@
 
 
-#include "shared-bindings/ramio/__init__.h"
-#include "shared-bindings/ramio/RAM.h"
+#include "shared-bindings/rambus/__init__.h"
+#include "shared-bindings/rambus/RAM.h"
