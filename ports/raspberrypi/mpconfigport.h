@@ -61,6 +61,14 @@
 #define MICROPY_PY_LWIP_EXIT    cyw43_arch_lwip_end();
 #endif
 
+extern const struct _mp_obj_module_t ramio_module;
+
+extern const struct _mp_obj_module_t neopixel_write_module;
+
+// #ifndef MICROPY_PORT_BUILTIN_MODULES
+// #define MICROPY_PORT_BUILTIN_MODULES
+MICROPY_PORT_BUILTIN_MODULES += { MP_OBJ_NEW_QSTR(MP_QSTR_ramio), (mp_obj_t)&ramio_module } \
+
 // Protect the background queue with a lock because both cores may modify it.
 #include "pico/critical_section.h"
 extern critical_section_t background_queue_lock;

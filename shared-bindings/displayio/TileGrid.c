@@ -105,7 +105,11 @@ STATIC mp_obj_t displayio_tilegrid_make_new(const mp_obj_type_t *type, size_t n_
         bitmap_width = bmp->width;
         bitmap_height = bmp->height;
     } else {
-        mp_raise_TypeError_varg(MP_ERROR_TEXT("unsupported %q type"), MP_QSTR_bitmap);
+        displayio_bitmap_t *bmp = MP_OBJ_TO_PTR(bitmap);
+        bitmap_width = bmp->width;
+        bitmap_height = bmp->height;
+
+        // mp_raise_TypeError_varg(MP_ERROR_TEXT("unsupported %q type"), MP_QSTR_bitmap);
     }
     mp_obj_t pixel_shader = args[ARG_pixel_shader].u_obj;
     if (!mp_obj_is_type(pixel_shader, &displayio_colorconverter_type) &&

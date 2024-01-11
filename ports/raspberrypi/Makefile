@@ -367,6 +367,18 @@ else
 OBJ_MBEDTLS :=
 endif
 
+SRC_SHARED_MODULE = ramio/__init__.c \
+                    ramio/RAM.c \
+
+
+SRC_BINDINGS = \
+	ramio/__init__.c \
+  ramio/RAM.c \
+
+SRC_BINDINGS_EXPANDED = $(addprefix shared-bindings/, $(SRC_BINDINGS)) \
+                        $(addprefix common-hal/, $(SRC_BINDINGS))
+
+
 SRC_COMMON_HAL_EXPANDED = $(addprefix shared-bindings/, $(SRC_COMMON_HAL)) \
                           $(addprefix shared-bindings/, $(SRC_BINDINGS_ENUMS)) \
                           $(addprefix common-hal/, $(SRC_COMMON_HAL))
@@ -407,6 +419,8 @@ OBJ += $(addprefix $(BUILD)/, $(SRC_S_UPPER:.S=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_MOD:.c=.o))
 OBJ += $(BUILD)/boot2_padded_checksummed.o
 OBJ += $(OBJ_MBEDTLS)
+# Add the resulting objects to the full list
+OBJ += $(addprefix $(BUILD)/, $(SRC_BINDINGS_EXPANDED:.c=.o))
 
 $(BUILD)/%.o: $(BUILD)/%.S
 	$(STEPECHO) "CC $<"
@@ -438,6 +452,8 @@ $(BUILD)/boot2.elf: $(BUILD)/stage2.c
 	$(Q)$(SIZE) $@
 
 SRC_QSTR += $(SRC_C) $(SRC_SUPERVISOR) $(SRC_COMMON_HAL_EXPANDED) $(SRC_SHARED_MODULE_EXPANDED) $(SRC_CIRCUITPY_COMMON)
+# Add the sources for QSTR generation
+SRC_QSTR += $(SRC_C) $(SRC_BINDINGS_EXPANDED) $(STM_SRC_C)
 
 all: $(BUILD)/firmware.uf2
 
