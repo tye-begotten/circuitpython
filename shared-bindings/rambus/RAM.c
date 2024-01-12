@@ -127,21 +127,10 @@ STATIC mp_obj_t rambus_ram_obj_get_end_addr(mp_obj_t self_in) {
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_end_addr_obj, rambus_ram_obj_get_end_addr);
 MP_PROPERTY_GETTER(rambus_ram_end_addr_obj, (mp_obj_t)&rambus_ram_get_end_addr_obj);
 
-
 STATIC addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args) {
     return (addr_t)mp_arg_validate_int_range(args[arg].u_int, shared_module_rambus_ram_get_start_addr(self), 
         shared_module_rambus_ram_get_end_addr(self), arg);
 }
-
-// //|     cmd_bytes: int
-// //|     """The most recent cmd bytes.
-// //|     """
-// STATIC mp_obj_t rambus_ram_obj_get_cmd_bytes(mp_obj_t self_in) {
-//     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(self_in);
-//     return self->cmd_bytes;
-// }
-// MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_cmd_bytes_obj, rambus_ram_obj_get_cmd_bytes);
-// MP_PROPERTY_GETTER(rambus_ram_cmd_bytes_obj, (mp_obj_t)&rambus_ram_get_cmd_bytes_obj);
 
 //|     def write_byte(self, addr: int, data: int) -> None:
 //|         """Write the data byte to RAM at the given address.
@@ -230,7 +219,6 @@ STATIC const mp_rom_map_elem_t rambus_ram_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&rambus_ram_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_start_addr), MP_ROM_PTR(&rambus_ram_start_addr_obj) },
     { MP_ROM_QSTR(MP_QSTR_end_addr), MP_ROM_PTR(&rambus_ram_end_addr_obj) },
-    // { MP_ROM_QSTR(MP_QSTR_cmd_bytes), MP_ROM_PTR(&rambus_ram_cmd_bytes_obj) },
     { MP_ROM_QSTR(MP_QSTR_read_byte), MP_ROM_PTR(&rambus_ram_read_byte_obj) },
     { MP_ROM_QSTR(MP_QSTR_write_byte), MP_ROM_PTR(&rambus_ram_write_byte_obj) },
 };

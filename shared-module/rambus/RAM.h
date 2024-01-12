@@ -25,7 +25,6 @@ typedef struct {
     digitalio_digitalinout_obj_t hold;
     uint8_t mode;
     uint8_t cmd[6];
-    // mp_obj_t cmd_bytes;
 } rambus_ram_obj_t;
 
 void wait_ns(uint32_t ns);
@@ -38,7 +37,6 @@ void shared_module_rambus_ram_check_deinit(rambus_ram_obj_t *self);
 addr_t shared_module_rambus_ram_get_size(rambus_ram_obj_t *self);
 addr_t shared_module_rambus_ram_get_start_addr(rambus_ram_obj_t *self);
 addr_t shared_module_rambus_ram_get_end_addr(rambus_ram_obj_t *self);
-// byte* shared_module_rambus_ram_get_cmd_bytes(rambus_ram_obj_t *self);
 
 uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self);
 void shared_module_rambus_ram_set_mode(rambus_ram_obj_t *self, uint8_t mode);

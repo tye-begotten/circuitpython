@@ -12,16 +12,8 @@ uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self);
 extern addr_t shared_module_rambus_ram_get_size(rambus_ram_obj_t *self);
 extern addr_t shared_module_rambus_ram_get_start_addr(rambus_ram_obj_t *self);
 extern addr_t shared_module_rambus_ram_get_end_addr(rambus_ram_obj_t *self);
-// extern byte* shared_module_rambus_ram_get_cmd_bytes(rambus_ram_obj_t *self);
-
-// extern uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self);
-// extern void shared_module_rambus_ram_set_mode(rambus_ram_obj_t *self, uint8_t mode);
 
 extern void shared_module_rambus_ram_write_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t data);
 extern uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, uint8_t start);
-
-// extern uint8_t* shared_module_rambus_ram_make_cmd(rambus_ram_obj_t *self, uint8_t cmd, uint32_t addr, uint8_t data);
-// extern void shared_module_rambus_ram_begin_op(rambus_ram_obj_t *self);
-// extern void shared_module_rambus_ram_end_op(rambus_ram_obj_t *self);
 
 #endif // MICROPY_INCLUDED_SHARED_BINDINGS_RAMBUS_RAM_H

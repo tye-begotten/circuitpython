@@ -20,19 +20,6 @@
 #define __MODE_PAGE 0b10000000
 #define __MODE_SEQ 0b01000000
 
-// #define READY_TIMEOUT_NS (1 * 1000 * 1000) // 1ms
-// STATIC int wait_for_data(rambus_ram_obj_t *self) {
-//     uint64_t deadline = common_hal_time_monotonic_ns() + READY_TIMEOUT_NS;
-    
-//     while (common_hal_time_monotonic_ns() < deadline) {
-//         uint8_t b;
-//         common_hal_busio_spi_read(self->spi, &b, 1, 0xff);
-//         if (b == 0xff || b == 0x00) {
-//             return 0;
-//         }
-//     }
-//     return -ETIMEDOUT;
-// }
 
 void wait_ns(uint32_t ns) {
     uint64_t i = 0;
@@ -56,8 +43,6 @@ void shared_module_rambus_ram_construct(rambus_ram_obj_t *self, ram_types ram_ty
     self->wrd_size = wrd_size;
     self->spi = spi;
     self->mode = 0; // TODO: default mode param
-    // self->cmd = malloc(8);
-    // self->cmd_bytes = mp_obj_new_bytes(self->cmd, 8);
 
     
     common_hal_digitalio_digitalinout_construct(&self->cs, cs);
@@ -68,17 +53,6 @@ void shared_module_rambus_ram_construct(rambus_ram_obj_t *self, ram_types ram_ty
 
     shared_module_rambus_ram_begin_op(self);
     shared_module_rambus_ram_end_op(self);
-
-    // if (common_hal_busio_spi_try_lock(self->spi)) {
-    //     common_hal_busio_spi_configure(self->spi, 30000000, 0, 0, 8);
-    //     common_hal_busio_spi_unlock(self->spi);
-    // } else {
-    //     mp_raise_RuntimeError(MP_ERROR_TEXT("Unable to lock SPI device"));
-    // }
-
-    // common_hal_digitalio_digitalinout_set_value(&self->cs, false);
-    // common_hal_time_delay_ms(1);
-    // common_hal_digitalio_digitalinout_set_value(&self->cs, true);
 }
 
 void shared_module_rambus_ram_release(rambus_ram_obj_t *self) {
@@ -121,11 +95,6 @@ addr_t shared_module_rambus_ram_get_end_addr(rambus_ram_obj_t *self) {
     return shared_module_rambus_ram_get_start_addr(self) + shared_module_rambus_ram_get_size(self);
 }
 
-// byte* shared_module_rambus_ram_get_cmd_bytes(rambus_ram_obj_t *self) {
-//     return self->cmd;
-// }
-
-
 uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self) {
     shared_module_rambus_ram_check_deinit(self);
 
@@ -133,10 +102,8 @@ uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self) {
     shared_module_rambus_ram_begin_op(self);
 
     bool ok = common_hal_busio_spi_write(self->spi, self->cmd, 1);
-    // bool ok = common_hal_busio_spi_transfer(self->spi, self->cmd, self->cmd, 2);
 
     if (ok) {
-        // wait_for_data(self);
         ok = common_hal_busio_spi_read(self->spi, self->cmd, 1, 0xff);
     }
 
@@ -175,10 +142,7 @@ void shared_module_rambus_ram_write_byte(rambus_ram_obj_t *self, addr_t addr, ui
     shared_module_rambus_ram_check_deinit(self);
     shared_module_rambus_ram_set_mode(self, __MODE_BYTE);
     shared_module_rambus_ram_begin_op(self);
-    // mp_printf(&mp_plat_print, "writing byte: %d\n", data);
     bool ok = common_hal_busio_spi_write(self->spi, shared_module_rambus_ram_make_cmd(self, __WRITE, addr, data), 5);
-    // mp_print_str(&mp_plat_print, "cmd after write:\n");
-    // print_cmd(self);
     shared_module_rambus_ram_end_op(self);
 
     if (!ok) {
@@ -191,7 +155,6 @@ uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, 
     
     shared_module_rambus_ram_set_mode(self, __MODE_BYTE);
     shared_module_rambus_ram_begin_op(self);
-    // mp_printf(&mp_plat_print, "reading byte at addr: %x\n", addr);
     shared_module_rambus_ram_make_cmd(self, __READ, addr, 0);
 
     if (buf == NULL) {
@@ -201,48 +164,12 @@ uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, 
     bool ok = common_hal_busio_spi_transfer(self->spi, self->cmd, buf, 6);
     uint8_t result = buf[5];
 
-    // mp_print_str(&mp_plat_print, "cmd after read:\n");
-    // print_cmd(self);
-
-    // for (int i = 1; i < 8; i++) {
-    //     if (result < 66 && result > 69) {
-    //         result = self->cmd[i];
-    //     } else {
-    //         break;
-    //     }
-    // }
-    // uint8_t result = 0;
-    // bool ok = common_hal_busio_spi_write(self->spi, shared_module_rambus_ram_make_cmd(self, __READ, addr, 0), 5);
-    // if (ok) {
-    //     // wait_for_data(self);
-    //     if (buf != NULL) {
-    //         ok = common_hal_busio_spi_read(self->spi, buf + start, 1, 0xff);
-    //         // if (buf[0] > 60 && buf[0] < 70) {
-    //         //     result = buf[0];
-    //         // } else {
-    //         //     ok = common_hal_busio_spi_read(self->spi, buf + start, 1, 0xff);
-    //         //     result = buf[0];
-    //         // }
-    //     } else {
-    //         ok = common_hal_busio_spi_read(self->spi, self->cmd, 1, 0xff);
-    //         // if (self->cmd[0] > 60 && self->cmd[0] < 70) {
-    //         //     result = self->cmd[0];
-    //         // } else {
-    //         //     ok = common_hal_busio_spi_read(self->spi, self->cmd, 1, 0xff);
-    //         //     result = self->cmd[0];
-    //         // }
-    //     }
-    // }
-
     shared_module_rambus_ram_end_op(self);
 
     if (!ok) {
         mp_raise_OSError(MP_EIO);
     }
     
-    // if (result == 255) {
-    //     return 70;
-    // }
     return result;
 }
 
@@ -255,12 +182,7 @@ void print_cmd(rambus_ram_obj_t *self) {
     mp_printf(&mp_plat_print, "    addr3=%x\n", self->cmd[3]);
     mp_printf(&mp_plat_print, "    data=%x\n", self->cmd[4]);
     mp_printf(&mp_plat_print, "    b5=%x\n", self->cmd[5]);
-    // mp_printf(&mp_plat_print, "    b6=%x\n", self->cmd[6]);
-    // mp_printf(&mp_plat_print, "    b7=%x\n", self->cmd[7]);
     mp_print_str(&mp_plat_print, "-----------------------\n");
-    
-    // mp_str_print_quoted(&mp_plat_print, self->cmd, 8, true);
-    // mp_print_str(&mp_plat_print, "\n");
 }
 
 uint8_t* shared_module_rambus_ram_make_cmd(rambus_ram_obj_t *self, uint8_t cmd, addr_t addr, uint8_t data) {
@@ -282,7 +204,6 @@ void shared_module_rambus_ram_begin_op(rambus_ram_obj_t *self) {
     if (common_hal_busio_spi_try_lock(self->spi)) {
         common_hal_busio_spi_configure(self->spi, 30000000, 0, 0, 8);
         common_hal_digitalio_digitalinout_set_value(&self->cs, false);
-        // wait_ns(20);
     } else {
         mp_raise_RuntimeError(MP_ERROR_TEXT("Unable to lock SPI device"));
     }
