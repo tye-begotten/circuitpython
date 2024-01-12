@@ -502,8 +502,6 @@ SRC_COMMON_HAL_ALL = \
 	pulseio/__init__.c \
 	pwmio/PWMOut.c \
 	pwmio/__init__.c \
-	rambus/__init__.c \
-	rambus/RAM.c \
 	rgbmatrix/RGBMatrix.c \
 	rgbmatrix/__init__.c \
 	rotaryio/IncrementalEncoder.c \

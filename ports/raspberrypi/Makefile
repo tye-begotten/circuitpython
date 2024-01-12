@@ -367,17 +367,6 @@ else
 OBJ_MBEDTLS :=
 endif
 
-SRC_SHARED_MODULE = rambus/__init__.c \
-                    rambus/RAM.c \
-
-
-SRC_BINDINGS = \
-	rambus/__init__.c \
-  rambus/RAM.c \
-
-SRC_BINDINGS_EXPANDED = $(addprefix shared-bindings/, $(SRC_BINDINGS)) \
-                        $(addprefix common-hal/, $(SRC_BINDINGS))
-
 
 SRC_COMMON_HAL_EXPANDED = $(addprefix shared-bindings/, $(SRC_COMMON_HAL)) \
                           $(addprefix shared-bindings/, $(SRC_BINDINGS_ENUMS)) \

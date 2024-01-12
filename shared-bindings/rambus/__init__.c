@@ -1,6 +1,5 @@
 
 
-#include "py/obj.h"
 #include "py/runtime.h"
 
 #include "shared-bindings/rambus/__init__.h"
@@ -17,3 +16,5 @@ const mp_obj_module_t rambus_module = {
     .base = { &mp_type_module },
     .globals = (mp_obj_dict_t*)&rambus_module_globals,
 };
+
+MP_REGISTER_MODULE(MP_QSTR_rambus, rambus_module);
