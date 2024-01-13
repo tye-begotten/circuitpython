@@ -10,26 +10,12 @@
 #include "extmod/vfs_fat.h"
 
 typedef struct {
-    pyb_file_obj_t *file;
-    uint16_t data_offset;
-    uint32_t r_bitmask;
-    uint32_t g_bitmask;
-    uint32_t b_bitmask;
-    bool bitfield_compressed;
-    union {
-        mp_obj_base_t *pixel_shader_base;
-        struct displayio_palette *palette;
-        struct displayio_colorconverter *colorconverter;
-    };
-} bitmap_file_header_t;
-
-typedef struct {
     mp_obj_base_t base;
     uint16_t width;
     uint16_t height;
     rambus_ram_obj_t *ram;
-    bitmap_file_header_t *file_header;
     addr_t addr;
+    addr_t size;
     uint8_t *pxbuf;
     uint16_t stride; // uint32_t's
     uint8_t bits_per_pixel;
@@ -37,6 +23,11 @@ typedef struct {
     size_t x_mask;
     displayio_area_t dirty_area;
     uint16_t bitmask;
+    union {
+        mp_obj_base_t *pixel_shader_base;
+        struct displayio_palette *palette;
+        struct displayio_colorconverter *colorconverter;
+    };
     bool read_only;
 } displayio_rambusbitmap_t;
 

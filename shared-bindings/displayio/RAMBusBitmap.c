@@ -148,6 +148,20 @@ MP_DEFINE_CONST_FUN_OBJ_1(displayio_rambusbitmap_get_bits_per_value_obj, display
 MP_PROPERTY_GETTER(displayio_rambusbitmap_bits_per_value_obj,
     (mp_obj_t)&displayio_rambusbitmap_get_bits_per_value_obj);
 
+//|     size: int
+//|     """Size of the raw bitmap data in bytes. (read only)"""
+STATIC mp_obj_t displayio_rambusbitmap_obj_get_size(mp_obj_t self_in) {
+    displayio_rambusbitmap_t *self = MP_OBJ_TO_PTR(self_in);
+
+    check_for_deinit(self);
+    return mp_obj_new_int(common_hal_displayio_rambusbitmap_get_size(self));
+}
+
+MP_DEFINE_CONST_FUN_OBJ_1(displayio_rambusbitmap_get_size_obj, displayio_rambusbitmap_obj_get_size);
+
+MP_PROPERTY_GETTER(displayio_rambusbitmap_size_obj,
+    (mp_obj_t)&displayio_rambusbitmap_get_size_obj);
+
 //|     pixel_shader: Union[ColorConverter, Palette]
 //|     """The image's pixel_shader.  The type depends on the underlying
 //|     bitmap's structure.  The pixel shader can be modified (e.g., to set the
@@ -308,6 +322,7 @@ STATIC const mp_rom_map_elem_t displayio_rambusbitmap_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_height), MP_ROM_PTR(&displayio_rambusbitmap_height_obj) },
     { MP_ROM_QSTR(MP_QSTR_width), MP_ROM_PTR(&displayio_rambusbitmap_width_obj) },
     { MP_ROM_QSTR(MP_QSTR_bits_per_value), MP_ROM_PTR(&displayio_rambusbitmap_bits_per_value_obj) },
+    { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&displayio_rambusbitmap_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_pixel_shader), MP_ROM_PTR(&displayio_rambusbitmap_pixel_shader_obj) },
     { MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&displayio_rambusbitmap_fill_obj) },
     { MP_ROM_QSTR(MP_QSTR_dirty), MP_ROM_PTR(&displayio_rambusbitmap_dirty_obj) },
