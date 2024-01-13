@@ -42,9 +42,12 @@ uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self);
 void shared_module_rambus_ram_set_mode(rambus_ram_obj_t *self, uint8_t mode);
 
 void shared_module_rambus_ram_write_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t data);
-uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, uint8_t start);
 void shared_module_rambus_ram_write_page(rambus_ram_obj_t *self, addr_t addr, uint8_t *data, size_t len);
+void shared_module_rambus_ram_write_seq(rambus_ram_obj_t *self, addr_t addr, uint8_t *data, size_t len);
+void shared_module_rambus_ram_write_into(rambus_ram_obj_t *self, uint8_t mode, addr_t addr, uint8_t *data, size_t len);
+uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, uint8_t start);
 void shared_module_rambus_ram_read_page(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, size_t len);
+void shared_module_rambus_ram_read_seq(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, size_t len);
 void shared_module_rambus_ram_read_into(rambus_ram_obj_t *self, uint8_t mode, addr_t addr, uint8_t *buf, size_t len);
 
 uint8_t* shared_module_rambus_ram_make_cmd(rambus_ram_obj_t *self, uint8_t cmd, addr_t addr, uint8_t data);

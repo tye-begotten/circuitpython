@@ -151,8 +151,16 @@ void shared_module_rambus_ram_write_byte(rambus_ram_obj_t *self, addr_t addr, ui
 }
 
 void shared_module_rambus_ram_write_page(rambus_ram_obj_t *self, addr_t addr, uint8_t *data, size_t len) {
+    shared_module_rambus_ram_write_into(self, __MODE_PAGE, addr, data, len);
+}
+
+void shared_module_rambus_ram_write_seq(rambus_ram_obj_t *self, addr_t addr, uint8_t *data, size_t len) {
+    shared_module_rambus_ram_write_into(self, __MODE_SEQ, addr, data, len);
+}
+
+void shared_module_rambus_ram_write_into(rambus_ram_obj_t *self, uint8_t mode, addr_t addr, uint8_t *data, size_t len) {
     shared_module_rambus_ram_check_deinit(self);
-    shared_module_rambus_ram_set_mode(self, __MODE_PAGE);
+    shared_module_rambus_ram_set_mode(self, mode);
     shared_module_rambus_ram_begin_op(self);
 
     bool ok = common_hal_busio_spi_write(self->spi, shared_module_rambus_ram_make_cmd(self, __WRITE, addr, 0), 4) &&
@@ -190,6 +198,10 @@ uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, 
 
 void shared_module_rambus_ram_read_page(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, size_t len) {
     shared_module_rambus_ram_read_into(self, __MODE_PAGE, addr, buf, len);
+}
+
+void shared_module_rambus_ram_read_seq(rambus_ram_obj_t *self, addr_t addr, uint8_t *buf, size_t len) {
+    shared_module_rambus_ram_read_into(self, __MODE_SEQ, addr, buf, len);
 }
 
 void shared_module_rambus_ram_read_into(rambus_ram_obj_t *self, uint8_t mode, addr_t addr, uint8_t *buf, size_t len) {
