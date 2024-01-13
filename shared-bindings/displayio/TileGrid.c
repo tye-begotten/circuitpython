@@ -36,6 +36,7 @@
 #include "shared-bindings/displayio/Bitmap.h"
 #include "shared-bindings/displayio/ColorConverter.h"
 #include "shared-bindings/displayio/OnDiskBitmap.h"
+#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/Palette.h"
 
 //| class TileGrid:
@@ -67,7 +68,7 @@
 //|
 //|         tile_width and tile_height match the height of the bitmap by default.
 //|
-//|         :param Bitmap,OnDiskBitmap bitmap: The bitmap storing one or more tiles.
+//|         :param Bitmap,OnDiskBitmap,RAMBusBitmap bitmap: The bitmap storing one or more tiles.
 //|         :param ColorConverter,Palette pixel_shader: The pixel shader that produces colors from values
 //|         :param int width: Width of the grid in tiles.
 //|         :param int height: Height of the grid in tiles.
@@ -104,12 +105,12 @@ STATIC mp_obj_t displayio_tilegrid_make_new(const mp_obj_type_t *type, size_t n_
         displayio_ondiskbitmap_t *bmp = MP_OBJ_TO_PTR(bitmap);
         bitmap_width = bmp->width;
         bitmap_height = bmp->height;
-    } else {
-        displayio_bitmap_t *bmp = MP_OBJ_TO_PTR(bitmap);
+    } else if (mp_obj_is_type(bitmap, &displayio_rambusbitmap_type)) {
+        displayio_rambusbitmap_t *bmp = MP_OBJ_TO_PTR(bitmap);
         bitmap_width = bmp->width;
         bitmap_height = bmp->height;
-
-        // mp_raise_TypeError_varg(MP_ERROR_TEXT("unsupported %q type"), MP_QSTR_bitmap);
+    } else {
+        mp_raise_TypeError_varg(MP_ERROR_TEXT("unsupported %q type"), MP_QSTR_bitmap);
     }
     mp_obj_t pixel_shader = args[ARG_pixel_shader].u_obj;
     if (!mp_obj_is_type(pixel_shader, &displayio_colorconverter_type) &&

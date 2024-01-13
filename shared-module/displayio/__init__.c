@@ -32,6 +32,7 @@
 #include "py/runtime.h"
 #include "shared-bindings/board/__init__.h"
 #include "shared-bindings/displayio/Bitmap.h"
+#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/Group.h"
 #include "shared-bindings/displayio/Palette.h"
 #include "shared-module/displayio/area.h"

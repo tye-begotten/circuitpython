@@ -57,9 +57,9 @@ STATIC mp_obj_t rambus_ram_make_new(const mp_obj_type_t *type, size_t n_args, si
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-    uint16_t pg_size = (uint16_t)mp_arg_validate_int_range(args[ARG_pg_size].u_int, 1, 0xffff, ARG_pg_size);
-    uint16_t pg_cnt = (uint16_t)mp_arg_validate_int_range(args[ARG_pg_cnt].u_int, 1, 0xffff, ARG_pg_cnt);
-    uint16_t wrd_size = (uint16_t)mp_arg_validate_int_range(args[ARG_wrd_size].u_int, 1, 255, ARG_wrd_size);
+    uint16_t pg_size = (uint16_t)mp_arg_validate_int_range(args[ARG_pg_size].u_int, 1, 0xffff, MP_QSTR_pg_size);
+    uint16_t pg_cnt = (uint16_t)mp_arg_validate_int_range(args[ARG_pg_cnt].u_int, 1, 0xffff, MP_QSTR_pg_cnt);
+    uint16_t wrd_size = (uint16_t)mp_arg_validate_int_range(args[ARG_wrd_size].u_int, 1, 255, MP_QSTR_wrd_size);
     busio_spi_obj_t* spi = validate_obj_is_spi_bus(args[ARG_spi].u_obj, MP_QSTR_spi);
     const mcu_pin_obj_t* cs = validate_obj_is_pin(args[ARG_cs].u_obj, MP_QSTR_cs);
     const mcu_pin_obj_t* hold = validate_obj_is_pin(args[ARG_hold].u_obj, MP_QSTR_hold);

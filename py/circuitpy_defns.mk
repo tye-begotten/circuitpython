@@ -627,6 +627,7 @@ SRC_SHARED_MODULE_ALL = \
 	displayio/Group.c \
 	displayio/OnDiskBitmap.c \
 	displayio/Palette.c \
+	displayio/RAMBusBitmap.c \
 	displayio/TileGrid.c \
 	displayio/area.c \
 	displayio/__init__.c \

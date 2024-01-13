@@ -39,6 +39,7 @@
 #include "shared-bindings/displayio/Group.h"
 #include "shared-bindings/displayio/OnDiskBitmap.h"
 #include "shared-bindings/displayio/Palette.h"
+#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/TileGrid.h"
 #if CIRCUITPY_EPAPERDISPLAY
 #include "shared-bindings/epaperdisplay/EPaperDisplay.h"
@@ -98,6 +99,7 @@ STATIC const mp_rom_map_elem_t displayio_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_Group), MP_ROM_PTR(&displayio_group_type) },
     { MP_ROM_QSTR(MP_QSTR_OnDiskBitmap), MP_ROM_PTR(&displayio_ondiskbitmap_type) },
     { MP_ROM_QSTR(MP_QSTR_Palette), MP_ROM_PTR(&displayio_palette_type) },
+    { MP_ROM_QSTR(MP_QSTR_RAMBusBitmap), MP_ROM_PTR(&displayio_rambusbitmap_type) },
     { MP_ROM_QSTR(MP_QSTR_TileGrid), MP_ROM_PTR(&displayio_tilegrid_type) },
 
     // Remove these in CircuitPython 10

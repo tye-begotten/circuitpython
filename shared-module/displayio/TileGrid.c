@@ -24,6 +24,7 @@
  * THE SOFTWARE.
  */
 
+#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/TileGrid.h"
 
 #include "py/runtime.h"
@@ -504,6 +505,8 @@ bool displayio_tilegrid_fill_area(displayio_tilegrid_t *self,
                 input_pixel.pixel = common_hal_displayio_bitmap_get_pixel(self->bitmap, input_pixel.tile_x, input_pixel.tile_y);
             } else if (mp_obj_is_type(self->bitmap, &displayio_ondiskbitmap_type)) {
                 input_pixel.pixel = common_hal_displayio_ondiskbitmap_get_pixel(self->bitmap, input_pixel.tile_x, input_pixel.tile_y);
+            } else if (mp_obj_is_type(self->bitmap, &displayio_rambusbitmap_type)) {
+                input_pixel.pixel = common_hal_displayio_rambusbitmap_get_pixel(self->bitmap, input_pixel.tile_x, input_pixel.tile_y);
             }
 
             output_pixel.opaque = true;
@@ -573,6 +576,8 @@ void displayio_tilegrid_finish_refresh(displayio_tilegrid_t *self) {
     } else if (mp_obj_is_type(self->bitmap, &displayio_ondiskbitmap_type)) {
         // OnDiskBitmap changes will trigger a complete reload so no need to
         // track changes.
+    } else if (mp_obj_is_type(self->bitmap, &displayio_rambusbitmap_type)) {
+        displayio_rambusbitmap_finish_refresh(self->bitmap);
     }
     // TODO(tannewt): We could double buffer changes to position and move them over here.
     // That way they won't change during a refresh and tear.
@@ -602,8 +607,14 @@ displayio_area_t *displayio_tilegrid_get_refresh_areas(displayio_tilegrid_t *sel
     }
 
     // If we have an in-memory bitmap, then check it for modifications.
+    displayio_area_t *refresh_area = NULL;
     if (mp_obj_is_type(self->bitmap, &displayio_bitmap_type)) {
-        displayio_area_t *refresh_area = displayio_bitmap_get_refresh_areas(self->bitmap, tail);
+        refresh_area = displayio_bitmap_get_refresh_areas(self->bitmap, tail);
+    } else if (mp_obj_is_type(self->bitmap, &displayio_rambusbitmap_type)) {
+        refresh_area = displayio_rambusbitmap_get_refresh_areas(self->bitmap, tail);
+    }
+
+    if (refresh_area != NULL) {
         if (refresh_area != tail) {
             // Special case a TileGrid that shows a full bitmap and use its
             // dirty area. Copy it to ours so we can transform it.
