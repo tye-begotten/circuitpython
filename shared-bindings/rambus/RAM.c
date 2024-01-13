@@ -134,13 +134,13 @@ STATIC addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args) {
         shared_module_rambus_ram_get_end_addr(self), arg);
 }
 
-STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out) {
+STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out) {
     if (args[arg].u_obj == mp_const_none) {
         return NULL;
     }
 
     mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[arg].u_obj, &bufinfo, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[arg].u_obj, &bufinfo, buf_type);
     // Compute bounds in terms of elements, not bytes.
     int stride_in_bytes = mp_binary_get_size('@', bufinfo.typecode, NULL);
     size_t length = bufinfo.len / stride_in_bytes;
@@ -206,7 +206,7 @@ STATIC mp_obj_t rambus_ram_obj_write_page(size_t n_args, const mp_obj_t *pos_arg
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *data = check_buffer(self, ARG_data, args, 0, -1, &len);
+    uint8_t *data = check_buffer(self, MP_BUFFER_READ, ARG_data, args, 0, -1, &len);
 
     if (data != NULL) {
         shared_module_rambus_ram_write_page(self, addr, data, len);
@@ -241,7 +241,7 @@ STATIC mp_obj_t rambus_ram_obj_write_seq(size_t n_args, const mp_obj_t *pos_args
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *data = check_buffer(self, ARG_data, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
+    uint8_t *data = check_buffer(self, MP_BUFFER_READ, ARG_data, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
 
     if (data != NULL) {
         shared_module_rambus_ram_write_seq(self, addr, data, len);
@@ -254,8 +254,10 @@ STATIC mp_obj_t rambus_ram_obj_write_seq(size_t n_args, const mp_obj_t *pos_args
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_write_seq_obj, 3, rambus_ram_obj_write_seq);
 
 //|     import sys
-//|     def read_byte(self, addr: int, buf: WriteableBuffer = None, start: int = 0) -> None:
+//|     def read_byte(self, addr: int, buf: WriteableBuffer = None, start: int = 0) -> int:
 //|         """Read the data byte from RAM at the given address.
+//|
+//|         Returns an int between 0-255.
 //|
 //|         :param int addr: the 24 bit address to write to
 //|         :param WriteableBuffer buf: the existing buffer to write into
@@ -278,8 +280,8 @@ STATIC mp_obj_t rambus_ram_obj_read_byte(size_t n_args, const mp_obj_t *pos_args
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, ARG_buffer, args, 0, -1, &len);
-
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, 0, -1, &len);
+    // MP_OBJ_NEW_SMALL_INT()
     return mp_obj_new_int_from_uint(shared_module_rambus_ram_read_byte(self, addr, bufaddr, 0));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_byte_obj, 2, rambus_ram_obj_read_byte);
@@ -310,7 +312,7 @@ STATIC mp_obj_t rambus_ram_obj_read_page(size_t n_args, const mp_obj_t *pos_args
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
 
     mp_obj_t result;
     if (bufaddr == NULL) {
@@ -346,10 +348,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_page_obj, 2, rambus_ram_obj_re
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_addr, ARG_len, ARG_buffer, ARG_start, ARG_end };
+    enum { ARG_addr, ARG_size, ARG_buffer, ARG_start, ARG_end };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_len, MP_ARG_INT, {.u_int = -1} },
+        { MP_QSTR_size, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_buffer, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_end, MP_ARG_INT, {.u_int = -1} },
@@ -360,11 +362,11 @@ STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args,
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
 
     mp_obj_t result;
     if (bufaddr == NULL) {
-        len = (addr_t)args[ARG_len].u_int;
+        len = (addr_t)args[ARG_size].u_int;
         if (len < 1) {
             len = shared_module_rambus_ram_get_size(self);
         }
@@ -376,8 +378,8 @@ STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args,
     } else {
         // If a buffer was provided AND a length was specified, try to read that length into the buffer.
         // If that length is outside the buffer bounds, ignore it and read the buffer length.
-        if ((size_t)args[ARG_len].u_int < len) {
-            len = (size_t)args[ARG_len].u_int;
+        if ((size_t)args[ARG_size].u_int < len) {
+            len = (size_t)args[ARG_size].u_int;
         }
         result = args[ARG_buffer].u_obj;
     }
