@@ -121,17 +121,11 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
     uint32_t b_bitmask;
 
     if (bits_per_pixel == 16) {
-        mp_printf(&mp_plat_print, "Bitmap is RGB 16 bits per pixel\n");
-
         if (((header_size >= 56)) || (bitfield_compressed)) {
-            mp_printf(&mp_plat_print, "Bitmap is RGB 16 bit compressed color\n");
-
             r_bitmask = read_word(bmp_header, 27);
             g_bitmask = read_word(bmp_header, 29);
             b_bitmask = read_word(bmp_header, 31);
         } else { // no compression or short header means 5:5:5
-            mp_printf(&mp_plat_print, "Bitmap is RGB 16 bit 5:5:5 color\n");
-            
             r_bitmask = 0x7c00;
             g_bitmask = 0x3e0;
             b_bitmask = 0x1f;
@@ -145,8 +139,6 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
         common_hal_displayio_palette_construct(palette, number_of_colors, false);
 
         if (number_of_colors > 1) {
-            mp_printf(&mp_plat_print, "Bitmap is indexed %d colors\n", number_of_colors);
-
             uint16_t palette_size = number_of_colors * sizeof(uint32_t);
             uint16_t palette_offset = 0xe + header_size;
 
@@ -167,8 +159,6 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
             }
             m_free(palette_data);
         } else {
-            mp_printf(&mp_plat_print, "Bitmap is indexed monochrome colors\n");
-
             common_hal_displayio_palette_set_color(palette, 0, 0x0);
             common_hal_displayio_palette_set_color(palette, 1, 0xffffff);
         }
@@ -197,8 +187,6 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
         }
         self->stride = (bit_stride / 8);
     }
-
-    mp_printf(&mp_plat_print, "Loading bitmap data, %d bytes per pixel\n", bytes_per_pixel);
 
     // Read bmp pixel data from disk into RAM
     uint32_t location = 0;
@@ -268,8 +256,12 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
     } while (bytes_read > 0);
 
     self->size = location;
-    mp_printf(&mp_plat_print, "Finished reading %d bytes of bitmap data\n", self->size);
     
+    self->dirty_area.x1 = 0;
+    self->dirty_area.x2 = self->width;
+    self->dirty_area.y1 = 0;
+    self->dirty_area.y2 = self->height;
+
     gc_free(buf);
 }
 

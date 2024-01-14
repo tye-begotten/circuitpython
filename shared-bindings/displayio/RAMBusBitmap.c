@@ -19,7 +19,6 @@
 
 #include "shared-bindings/displayio/RAMBusBitmap.h"
 
-//| import rambus
 //| class RAMBusBitmap:
 //|     """Stores values of a certain size in a 2D array stored in BusRam
 //|
@@ -49,20 +48,20 @@
 //|         """
 //|         ...
 STATIC mp_obj_t displayio_rambusbitmap_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args) {
-    enum { ARG_width, ARG_height, ARG_ram, ARG_addr, ARG_file, ARG_value_count };
+    enum { ARG_ram, ARG_addr, ARG_file, ARG_width, ARG_height, ARG_value_count };
     static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_width, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_height, MP_ARG_REQUIRED | MP_ARG_INT },
         { MP_QSTR_ram, MP_ARG_REQUIRED | MP_ARG_OBJ },
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_file, MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_value_count, MP_ARG_INT, {.u_int = 65535} },
+        { MP_QSTR_file, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_width, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_height, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_value_count, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 65535} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
-    uint32_t width = mp_arg_validate_int_range(mp_obj_get_int(all_args[0]), 0, 32767, MP_QSTR_width);
-    uint32_t height = mp_arg_validate_int_range(mp_obj_get_int(all_args[1]), 0, 32767, MP_QSTR_height);
+    uint32_t width = mp_arg_validate_int_range(args[ARG_width].u_int, 0, 32767, MP_QSTR_width);
+    uint32_t height = mp_arg_validate_int_range(args[ARG_height].u_int, 0, 32767, MP_QSTR_height);
     uint32_t value_count = mp_arg_validate_int_range(args[ARG_value_count].u_int, 1, 65536, MP_QSTR_value_count);
     rambus_ram_obj_t *ram = MP_OBJ_TO_PTR(args[ARG_ram].u_obj);
     addr_t addr = mp_arg_validate_int_range(args[ARG_addr].u_int, 0, shared_module_rambus_ram_get_size(ram), MP_QSTR_addr);
@@ -98,7 +97,6 @@ STATIC mp_obj_t displayio_rambusbitmap_make_new(const mp_obj_type_t *type, size_
 
     return MP_OBJ_FROM_PTR(self);
 }
-
 
 STATIC void check_for_deinit(displayio_rambusbitmap_t *self) {
     if (common_hal_displayio_rambusbitmap_deinited(self)) {
@@ -246,6 +244,36 @@ STATIC mp_obj_t rambusbitmap_subscr(mp_obj_t self_in, mp_obj_t index_obj, mp_obj
     return mp_const_none;
 }
 
+//|     def load_from_file(self, file: Union[str, typing.BinaryIO, None]) -> None:
+//|         """Load a bitmap from disk into this RAMBusBitmap instance. Will overwrite any bitmap data currently
+//|            loaded or drawn in the bitmap and will adjust it's properties accordingly 
+//|
+//|         :param file file: The name of the bitmap file to read into RAM. For backwards compatibility, a file opened in binary mode may also be passed.
+//|         """
+//|         ...
+STATIC mp_obj_t displayio_rambusbitmap_obj_load_from_file(mp_obj_t self_in, mp_obj_t file_in) {
+    pyb_file_obj_t *file = NULL;
+
+    if (file_in == mp_const_none) {
+        mp_raise_ValueError_varg(MP_ERROR_TEXT("file is required"));
+    }
+
+    if (mp_obj_is_str(file_in)) {
+        file_in = mp_call_function_2(MP_OBJ_FROM_PTR(&mp_builtin_open_obj), file_in, MP_ROM_QSTR(MP_QSTR_rb));
+    }
+
+    if (!mp_obj_is_type(file_in, &mp_type_fileio)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("file must be a file opened in byte mode"));
+    }
+
+    file = MP_OBJ_TO_PTR(file_in);
+    displayio_rambusbitmap_t *self = MP_OBJ_TO_PTR(self_in);
+
+    common_hal_displayio_rambusbitmap_load_from_file(self, file);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(displayio_rambusbitmap_load_from_file_obj, displayio_rambusbitmap_obj_load_from_file);
+
 //|     def fill(self, value: int) -> None:
 //|         """Fills the bitmap with the supplied palette index value."""
 //|         ...
@@ -324,6 +352,7 @@ STATIC const mp_rom_map_elem_t displayio_rambusbitmap_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_bits_per_value), MP_ROM_PTR(&displayio_rambusbitmap_bits_per_value_obj) },
     { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&displayio_rambusbitmap_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_pixel_shader), MP_ROM_PTR(&displayio_rambusbitmap_pixel_shader_obj) },
+    { MP_ROM_QSTR(MP_QSTR_load_from_file), MP_ROM_PTR(&displayio_rambusbitmap_load_from_file_obj) },
     { MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&displayio_rambusbitmap_fill_obj) },
     { MP_ROM_QSTR(MP_QSTR_dirty), MP_ROM_PTR(&displayio_rambusbitmap_dirty_obj) },
     { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&displayio_rambusbitmap_deinit_obj) },

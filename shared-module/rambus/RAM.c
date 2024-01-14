@@ -52,6 +52,7 @@ void shared_module_rambus_ram_construct(rambus_ram_obj_t *self, ram_types ram_ty
     common_hal_digitalio_digitalinout_switch_to_output(&self->hold, true, DRIVE_MODE_PUSH_PULL);
 
     shared_module_rambus_ram_begin_op(self);
+    wait_ns(35);
     shared_module_rambus_ram_end_op(self);
 }
 
@@ -100,13 +101,8 @@ uint8_t shared_module_rambus_ram_get_mode(rambus_ram_obj_t *self) {
 
     self->cmd[0] = __READ_MODE;
     shared_module_rambus_ram_begin_op(self);
-
-    bool ok = common_hal_busio_spi_write(self->spi, self->cmd, 1);
-
-    if (ok) {
-        ok = common_hal_busio_spi_read(self->spi, self->cmd, 1, 0xff);
-    }
-
+    bool ok = common_hal_busio_spi_write(self->spi, self->cmd, 1) &&
+        common_hal_busio_spi_read(self->spi, self->cmd, 1, 0xff);
     shared_module_rambus_ram_end_op(self);
 
     if (!ok) {
@@ -124,7 +120,6 @@ void shared_module_rambus_ram_set_mode(rambus_ram_obj_t *self, uint8_t mode) {
     self->cmd[1] = mode;
     
     shared_module_rambus_ram_begin_op(self);
-
     bool ok = common_hal_busio_spi_write(self->spi, self->cmd, 2);
     shared_module_rambus_ram_end_op(self);
 
@@ -133,9 +128,9 @@ void shared_module_rambus_ram_set_mode(rambus_ram_obj_t *self, uint8_t mode) {
     }
 
     // TODO: remove check once working?
-    if (shared_module_rambus_ram_get_mode(self) != mode) {
-        mp_raise_ValueError(MP_ERROR_TEXT("Mode set failed"));
-    }
+    // if (shared_module_rambus_ram_get_mode(self) != mode) {
+    //     mp_raise_ValueError(MP_ERROR_TEXT("Mode set failed"));
+    // }
 }
 
 void shared_module_rambus_ram_write_byte(rambus_ram_obj_t *self, addr_t addr, uint8_t data) {
@@ -160,12 +155,11 @@ void shared_module_rambus_ram_write_seq(rambus_ram_obj_t *self, addr_t addr, uin
 
 void shared_module_rambus_ram_write_into(rambus_ram_obj_t *self, uint8_t mode, addr_t addr, uint8_t *data, size_t len) {
     shared_module_rambus_ram_check_deinit(self);
+
     shared_module_rambus_ram_set_mode(self, mode);
     shared_module_rambus_ram_begin_op(self);
-
     bool ok = common_hal_busio_spi_write(self->spi, shared_module_rambus_ram_make_cmd(self, __WRITE, addr, 0), 4) &&
         common_hal_busio_spi_write(self->spi, data, len);
-
     shared_module_rambus_ram_end_op(self);
 
     if (!ok) {
@@ -177,17 +171,17 @@ uint8_t shared_module_rambus_ram_read_byte(rambus_ram_obj_t *self, addr_t addr, 
     shared_module_rambus_ram_check_deinit(self);
     
     shared_module_rambus_ram_set_mode(self, __MODE_BYTE);
-    shared_module_rambus_ram_begin_op(self);
-    shared_module_rambus_ram_make_cmd(self, __READ, addr, 0);
-
     if (buf == NULL) {
         buf = self->cmd;
     }
 
-    bool ok = common_hal_busio_spi_transfer(self->spi, self->cmd, buf, 6);
-    uint8_t result = buf[5];
+    shared_module_rambus_ram_begin_op(self);
+
+    bool ok = common_hal_busio_spi_transfer(self->spi, shared_module_rambus_ram_make_cmd(self, __READ, addr, 0), buf, 6);
 
     shared_module_rambus_ram_end_op(self);
+
+    uint8_t result = buf[5];
 
     if (!ok) {
         mp_raise_OSError(MP_EIO);
