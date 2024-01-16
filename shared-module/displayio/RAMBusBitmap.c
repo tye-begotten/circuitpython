@@ -189,30 +189,36 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
     }
 
     // Read bmp pixel data from disk into RAM
-    uint32_t location = 0;
+    self->size = self->width * self->height * bytes_per_pixel;
+    uint32_t row_size = self->width / (8 / bits_per_pixel);
+    uint32_t location = self->size;
+    
     // We don't cache here because the underlying FS caches sectors.
     f_lseek(&file->fp, data_offset);
-    uint8_t *buf = m_malloc(2048);
+    uint8_t *buf = m_malloc(row_size);
     uint32_t pixel_data = 0;
     uint32_t result = 0;
+    uint32_t yoffset = 0;
 
-    do {
-        result = f_read(&file->fp, buf, 2048, &bytes_read);
-        if (result == FR_OK) {
+    // TODO: break out loading indexed bitmap vs truecolor
+    for (uint32_t y = self->height - 1; y >= 0; y--) {
+        result = f_read(&file->fp, buf, row_size, &bytes_read);
+        if (bytes_read < 1) {
+            break;
+        } else if (result == FR_OK ) {
             // mp_printf(&mp_plat_print, "Read %d byte chunk, %d bytes total\n", bytes_read, location + bytes_read);
+            yoffset = y * self->width;
 
             if (indexed && pixels_per_byte == 1) {
-                // If loading 8-bit color indices, can load chunks without processing
-                shared_module_rambus_ram_write_seq(self->ram, self->addr + location, buf, 2048);
+                // If loading 8-bit color indices, can load chunks without processing?
+                // shared_module_rambus_ram_write_seq(self->ram, self->addr + location, buf, row_size);
+
+                for (uint32_t x = 0; x < self->width; x++) {
+                    shared_module_rambus_ram_write_byte(self->ram, self->addr + (yoffset + x), buf[x]);
+                }
             } else {
                 // TODO: keep RAM sequence open with hold while writing bmp
                 for (uint32_t i = 0; i < bytes_read; i += bytes_per_pixel) {
-                    // for (uint8_t pxb = 0; pxb < bytes_per_pixel; pxb++) {
-                    //     // TODO: better way to convert to int size?
-                    //     pixel_data = 0;
-                    //     pixel_data |= buf[i + pxb] << (pxb * 8);
-                    // }
-
                     if (bytes_per_pixel == 1) {
                         pixel_data = buf[i];
                         uint8_t offset = (i % pixels_per_byte) * self->bits_per_pixel;
@@ -247,16 +253,15 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
                 }
             }
 
-            location += bytes_read;
+            location -= bytes_read;
         } else {
             // raise file error?
             mp_printf(&mp_plat_print, "Got non-success result code from file read: %d\n", result);
             break;
         }
-    } while (bytes_read > 0);
+    }
 
-    self->size = location;
-    
+    // self->size = location;
     self->dirty_area.x1 = 0;
     self->dirty_area.x2 = self->width;
     self->dirty_area.y1 = 0;
