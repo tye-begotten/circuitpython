@@ -116,9 +116,9 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
     common_hal_displayio_colorconverter_construct(colorconverter, false, DISPLAYIO_COLORSPACE_RGB888);
     self->colorconverter = colorconverter;
 
-    uint32_t r_bitmask;
-    uint32_t g_bitmask;
-    uint32_t b_bitmask;
+    uint32_t r_bitmask = 0;
+    uint32_t g_bitmask = 0;
+    uint32_t b_bitmask = 0;
 
     if (bits_per_pixel == 16) {
         if (((header_size >= 56)) || (bitfield_compressed)) {
@@ -188,10 +188,13 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
         self->stride = (bit_stride / 8);
     }
 
+    // mp_printf(&mp_plat_print, "loading bmp: indexed=%d, bits_per_pixel=%d, bytes_per_pixel=%d, pixels_per_byte=%d, number_of_colors=%d, stride=%d, compression=%d\n", 
+    //     indexed, bits_per_pixel, bytes_per_pixel, pixels_per_byte, number_of_colors, self->stride, compression);
+
     // Read bmp pixel data from disk into RAM
     self->size = self->width * self->height * bytes_per_pixel;
     uint32_t row_size = self->width / (8 / bits_per_pixel);
-    uint32_t location = self->size;
+    uint32_t location = 0; //self->size;
     
     // We don't cache here because the underlying FS caches sectors.
     f_lseek(&file->fp, data_offset);
@@ -209,24 +212,28 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
             // mp_printf(&mp_plat_print, "Read %d byte chunk, %d bytes total\n", bytes_read, location + bytes_read);
             yoffset = y * self->width;
 
-            if (indexed && pixels_per_byte == 1) {
+            if (indexed) {
                 // If loading 8-bit color indices, can load chunks without processing?
-                // shared_module_rambus_ram_write_seq(self->ram, self->addr + location, buf, row_size);
+                shared_module_rambus_ram_write_seq(self->ram, self->addr + location, buf, row_size);
 
-                for (uint32_t x = 0; x < self->width; x++) {
-                    shared_module_rambus_ram_write_byte(self->ram, self->addr + (yoffset + x), buf[x]);
-                }
+                // for (uint32_t x = 0; x < self->width; x++) {
+                //     shared_module_rambus_ram_write_byte(self->ram, self->addr + (yoffset + x), buf[x]);
+                // }
             } else {
                 // TODO: keep RAM sequence open with hold while writing bmp
-                for (uint32_t i = 0; i < bytes_read; i += bytes_per_pixel) {
+                for (uint32_t x = 0; x < self->width; x += bytes_per_pixel) {
                     if (bytes_per_pixel == 1) {
-                        pixel_data = buf[i];
-                        uint8_t offset = (i % pixels_per_byte) * self->bits_per_pixel;
-                        uint8_t mask = (1 << self->bits_per_pixel) - 1;
+                        if (indexed) {
+                            shared_module_rambus_ram_write_byte(self->ram, self->addr + (yoffset + x), buf[x]);
+                        } else {
+                            pixel_data = buf[x];
+                            uint8_t offset = (x % pixels_per_byte) * self->bits_per_pixel;
+                            uint8_t mask = (1 << self->bits_per_pixel) - 1;
 
-                        shared_module_rambus_ram_write_byte(self->ram, self->addr + location, (self->pxbuf[0] >> ((8 - self->bits_per_pixel) - offset)) & mask);
+                            shared_module_rambus_ram_write_byte(self->ram, self->addr + (yoffset + x), (self->pxbuf[0] >> ((8 - self->bits_per_pixel) - offset)) & mask);
+                        }
                     } else if (bytes_per_pixel == 2) {
-                        pixel_data = (buf[1] << 8) + (buf[0]);
+                        pixel_data = (buf[x + 1] << 8) + (buf[x]);
 
                         if (g_bitmask == 0x07e0) { // 565
                             self->pxbuf[0] = ((pixel_data & r_bitmask) >> 11);
@@ -240,20 +247,20 @@ void common_hal_displayio_rambusbitmap_load_from_file(displayio_rambusbitmap_t *
                         pixel_data = (self->pxbuf[0] << 19 | self->pxbuf[1] << 10 | self->pxbuf[2] << 3);
                         self->pxbuf[0] = pixel_data >> 24 & 0xff;
                         self->pxbuf[1] = pixel_data >> 16 & 0xff;
-                        shared_module_rambus_ram_write_seq(self->ram, self->addr + location, self->pxbuf, 2);
+                        shared_module_rambus_ram_write_seq(self->ram, self->addr + (yoffset + x), self->pxbuf, 2);
                     } else {
-                        pixel_data = (buf[3] << 24) + (buf[2] << 16) + (buf[1] << 8) + (buf[0]);
+                        pixel_data = (buf[x + 3] << 24) + (buf[x + 2] << 16) + (buf[x + 1] << 8) + (buf[0]);
 
                         self->pxbuf[0] = pixel_data >> 24 & 0xff;
                         self->pxbuf[1] = pixel_data >> 16 & 0xff;
                         self->pxbuf[2] = pixel_data >> 8 & 0xff;
                         self->pxbuf[3] = bitfield_compressed ? 0xff : pixel_data & 0xff;
-                        shared_module_rambus_ram_write_seq(self->ram, self->addr + location, self->pxbuf, 4);
+                        shared_module_rambus_ram_write_seq(self->ram, self->addr + (yoffset + x), self->pxbuf, 4);
                     }
                 }
             }
 
-            location -= bytes_read;
+            location += bytes_read;
         } else {
             // raise file error?
             mp_printf(&mp_plat_print, "Got non-success result code from file read: %d\n", result);
@@ -308,41 +315,91 @@ uint32_t common_hal_displayio_rambusbitmap_get_pixel(displayio_rambusbitmap_t *s
         return 0;
     }
 
-    int32_t row_start = y * self->stride;
-    uint8_t bytes_per_pixel = (self->bits_per_pixel / 8) ? (self->bits_per_pixel / 8) : 1;
-
-    shared_module_rambus_ram_read_seq(self->ram, self->addr + row_start + (x * bytes_per_pixel), self->pxbuf, bytes_per_pixel);
-    
-    if (bytes_per_pixel < 1) {
-        if (self->pixel_shader_base != NULL) {
-            // Indexed coloring
-            uint8_t pixels_per_byte = 8 / self->bits_per_pixel;
-
-            if (pixels_per_byte == 1) {
-                return self->pxbuf[0];
-            } else {
-                uint8_t offset = (x % pixels_per_byte) * self->bits_per_pixel;
-                uint8_t mask = (1 << self->bits_per_pixel) - 1;
-
-                return (self->pxbuf[0] >> ((8 - self->bits_per_pixel) - offset)) & mask;
-            }
-        } else {
-            uint32_t word = shared_module_rambus_ram_read_byte(self->ram, self->addr + (row_start + (x >> self->x_shift)), self->pxbuf, 0);
-
-            return (word >> (sizeof(uint32_t) * 8 - ((x & self->x_mask) + 1) * self->bits_per_pixel)) & self->bitmask;
-        }
+    uint32_t location;
+    uint8_t bytes_per_pixel = (self->bits_per_pixel / 8)  ? (self->bits_per_pixel / 8) : 1;
+    uint8_t pixels_per_byte = 8 / self->bits_per_pixel;
+    if (pixels_per_byte == 0) {
+        location = (self->height - y - 1) * self->stride + x * bytes_per_pixel;
     } else {
-        if (bytes_per_pixel == 1) {
-            return ((uint8_t *)self->pxbuf)[0];
-        } else if (bytes_per_pixel == 2) {
-            return ((uint16_t *)self->pxbuf)[0];
-        } else if (bytes_per_pixel == 4) {
-            return ((uint32_t *)self->pxbuf)[0];
-        }
+        location = (self->height - y - 1) * self->stride + x / pixels_per_byte;
     }
     
+    // We don't cache here because the underlying FS caches sectors.
+    shared_module_rambus_ram_read_seq(self->ram, self->addr + location, self->pxbuf, bytes_per_pixel);
+    uint32_t pixel_data = 0;
+    
+    // uint32_t tmp = 0;
+    // uint8_t red;
+    // uint8_t green;
+    // uint8_t blue;
+    if (bytes_per_pixel == 1) {
+        uint8_t offset = (x % pixels_per_byte) * self->bits_per_pixel;
+        uint8_t mask = (1 << self->bits_per_pixel) - 1;
+
+        return (self->pxbuf[0] >> ((8 - self->bits_per_pixel) - offset)) & mask;
+    } else if (bytes_per_pixel == 2) {
+        return pixel_data;
+
+        // if (self->g_bitmask == 0x07e0) { // 565
+        //     red = ((pixel_data & self->r_bitmask) >> 11);
+        //     green = ((pixel_data & self->g_bitmask) >> 5);
+        //     blue = ((pixel_data & self->b_bitmask) >> 0);
+        // } else { // 555
+        //     red = ((pixel_data & self->r_bitmask) >> 10);
+        //     green = ((pixel_data & self->g_bitmask) >> 4);
+        //     blue = ((pixel_data & self->b_bitmask) >> 0);
+        // }
+        // tmp = (red << 19 | green << 10 | blue << 3);
+        // return tmp;
+    // } else if ((bytes_per_pixel == 4) && (self->bitfield_compressed)) {
+    //     return pixel_data & 0x00FFFFFF;
+    } else {
+        return pixel_data;
+    }
+
     return 0;
 }
+
+// uint32_t common_hal_displayio_rambusbitmap_get_pixel(displayio_rambusbitmap_t *self, int16_t x, int16_t y) {
+//     if (x >= self->width || x < 0 || y >= self->height || y < 0) {
+//         return 0;
+//     }
+
+//     int32_t row_start = y * self->stride;
+//     uint8_t bytes_per_pixel = (self->bits_per_pixel / 8) ? (self->bits_per_pixel / 8) : 1;
+
+//     shared_module_rambus_ram_read_seq(self->ram, self->addr + row_start + (x * bytes_per_pixel), self->pxbuf, bytes_per_pixel);
+    
+//     if (bytes_per_pixel < 1) {
+//         if (self->pixel_shader_base != NULL) {
+//             // Indexed coloring
+//             uint8_t pixels_per_byte = 8 / self->bits_per_pixel;
+
+//             if (pixels_per_byte == 1) {
+//                 return self->pxbuf[0];
+//             } else {
+//                 uint8_t offset = (x % pixels_per_byte) * self->bits_per_pixel;
+//                 uint8_t mask = (1 << self->bits_per_pixel) - 1;
+
+//                 return (self->pxbuf[0] >> ((8 - self->bits_per_pixel) - offset)) & mask;
+//             }
+//         } else {
+//             uint32_t word = shared_module_rambus_ram_read_byte(self->ram, self->addr + (row_start + (x >> self->x_shift)), self->pxbuf, 0);
+
+//             return (word >> (sizeof(uint32_t) * 8 - ((x & self->x_mask) + 1) * self->bits_per_pixel)) & self->bitmask;
+//         }
+//     } else {
+//         if (bytes_per_pixel == 1) {
+//             return ((uint8_t *)self->pxbuf)[0];
+//         } else if (bytes_per_pixel == 2) {
+//             return ((uint16_t *)self->pxbuf)[0];
+//         } else if (bytes_per_pixel == 4) {
+//             return ((uint32_t *)self->pxbuf)[0];
+//         }
+//     }
+    
+//     return 0;
+// }
 
 void displayio_rambusbitmap_set_dirty_area(displayio_rambusbitmap_t *self, const displayio_area_t *dirty_area) {
     if (self->read_only) {

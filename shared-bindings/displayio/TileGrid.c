@@ -359,7 +359,7 @@ MP_PROPERTY_GETSET(displayio_tilegrid_pixel_shader_obj,
     (mp_obj_t)&displayio_tilegrid_get_pixel_shader_obj,
     (mp_obj_t)&displayio_tilegrid_set_pixel_shader_obj);
 
-//|     bitmap: Union[Bitmap, OnDiskBitmap]
+//|     bitmap: Union[Bitmap, OnDiskBitmap, RAMBusBitmap]
 //|     """The bitmap of the tilegrid."""
 STATIC mp_obj_t displayio_tilegrid_obj_get_bitmap(mp_obj_t self_in) {
     displayio_tilegrid_t *self = native_tilegrid(self_in);

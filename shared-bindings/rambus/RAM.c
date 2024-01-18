@@ -337,7 +337,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_page_obj, 2, rambus_ram_obj_re
 //|         """Read a sequence of bytes from RAM into the given buffer.
 //|
 //|         :param int addr: the 24 bit address to begin reading from
-//|         :param int len: the number of bytes to read from RAM. if no value is provided, the enire RAM will be read.
+//|         :param int size: the number of bytes to read from RAM. if no value is provided, the enire RAM will be read.
 //|                if a buffer is provided, the length must be less than or equal to the buffer length.
 //|         :param WriteableBuffer buf: the optional existing buffer to read into. if no buffer is provided, one will 
 //|                be created.
