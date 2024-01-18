@@ -147,6 +147,7 @@ extern void common_hal_mcu_enable_interrupts(void);
 // In extmod
 #define MICROPY_PY_JSON                 (CIRCUITPY_JSON)
 #define MICROPY_PY_MATH                  (0)
+// To enable mem_info / qstr_info
 #define MICROPY_PY_MICROPYTHON_MEM_INFO  (0)
 // Supplanted by shared-bindings/random
 #define MICROPY_PY_RANDOM               (0)
@@ -264,6 +265,7 @@ typedef long mp_off_t;
 #define MICROPY_PY_RE_MATCH_SPAN_START_END   (CIRCUITPY_RE)
 #define MICROPY_PY_RE_SUB                    (CIRCUITPY_RE)
 
+// To enable mem_info / qstr_info
 #define CIRCUITPY_MICROPYTHON_ADVANCED        (0)
 
 #ifndef MICROPY_FATFS_EXFAT
@@ -610,3 +612,6 @@ void background_callback_run_all(void);
 #define MICROPY_PY_BUILTINS_COMPILE (1)
 
 #endif  // __INCLUDED_MPCONFIG_CIRCUITPY_H
+
+
+#define MICROPY_PY_SYS_GETSIZEOF (0)
