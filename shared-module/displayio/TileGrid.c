@@ -24,13 +24,13 @@
  * THE SOFTWARE.
  */
 
-#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/TileGrid.h"
 
 #include "py/runtime.h"
 #include "shared-bindings/displayio/Bitmap.h"
 #include "shared-bindings/displayio/ColorConverter.h"
 #include "shared-bindings/displayio/OnDiskBitmap.h"
+#include "shared-bindings/displayio/RAMBusBitmap.h"
 #include "shared-bindings/displayio/Palette.h"
 
 void common_hal_displayio_tilegrid_construct(displayio_tilegrid_t *self, mp_obj_t bitmap,

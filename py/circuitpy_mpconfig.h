@@ -615,3 +615,7 @@ void background_callback_run_all(void);
 
 
 #define MICROPY_PY_SYS_GETSIZEOF (0)
+
+#ifndef CIRCUITPY_RAMBUS
+#define CIRCUITPY_RAMBUS (1)
+#endif

@@ -119,7 +119,7 @@ static void _get_screen_area(vectorio_vector_shape_t *self, displayio_area_t *ou
 }
 
 // Get the target pixel based on the shape's coordinate space
-static void screen_to_shape_coordinates(vectorio_vector_shape_t *self, uint16_t x, uint16_t y, int16_t *out_shape_x, int16_t *out_shape_y) {
+void screen_to_shape_coordinates(vectorio_vector_shape_t *self, uint16_t x, uint16_t y, int16_t *out_shape_x, int16_t *out_shape_y) {
     if (self->absolute_transform->transpose_xy) {
         *out_shape_x = y - self->absolute_transform->y - self->absolute_transform->dy * self->x;
         *out_shape_y = x - self->absolute_transform->x - self->absolute_transform->dx * self->y;

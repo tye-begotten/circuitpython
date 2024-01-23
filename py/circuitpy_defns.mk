@@ -675,6 +675,7 @@ SRC_SHARED_MODULE_ALL = \
 	rainbowio/__init__.c \
 	rambus/__init__.c \
 	rambus/RAM.c \
+	rambus/RAMBusDisplay.c \
 	random/__init__.c \
 	rgbmatrix/RGBMatrix.c \
 	rgbmatrix/__init__.c \
@@ -815,6 +816,7 @@ SRC_SHARED_MODULE_INTERNAL = \
 $(filter $(SRC_PATTERNS), \
 	displayio/bus_core.c \
 	displayio/display_core.c \
+	rambus/rambus_display_core.c \
 	os/getenv.c \
 	usb/utf16le.c \
 )

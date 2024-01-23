@@ -55,6 +55,11 @@
 #include "shared-module/sharpdisplay/SharpMemoryFramebuffer.h"
 #endif
 
+#if CIRCUITPY_RAMBUS
+#include "shared-module/rambus/RAMBusDisplay.h"
+#include "shared-bindings/rambus/RAMBusDisplay.h"
+#endif
+
 primary_display_bus_t display_buses[CIRCUITPY_DISPLAY_LIMIT];
 primary_display_t displays[CIRCUITPY_DISPLAY_LIMIT];
 
@@ -114,6 +119,10 @@ void displayio_background(void) {
         } else if (display_type == &epaperdisplay_epaperdisplay_type) {
             epaperdisplay_epaperdisplay_background(&displays[i].epaper_display);
         #endif
+        #if CIRCUITPY_RAMBUS
+        } else if (display_type == &rambus_rambusdisplay_type) {
+            // rambus_rambusdisplay_background(&displays[i].rambus_display);
+        #endif
         }
     }
 
@@ -137,6 +146,10 @@ void common_hal_displayio_release_displays(void) {
         #if CIRCUITPY_FRAMEBUFFERIO
         } else if (display_type == &framebufferio_framebufferdisplay_type) {
             release_framebufferdisplay(&displays[i].framebuffer_display);
+        #endif
+        #if CIRCUITPY_RAMBUS
+        } else if (display_type == &rambus_rambusdisplay_type) {
+            // release_rambusdisplay(&displays[i].rambus_display);
         #endif
         }
         displays[i].display_base.type = &mp_type_NoneType;
@@ -335,6 +348,10 @@ void reset_displays(void) {
         } else if (display_type == &framebufferio_framebufferdisplay_type) {
             framebufferio_framebufferdisplay_reset(&displays[i].framebuffer_display);
         #endif
+        #if CIRCUITPY_RAMBUS
+        } else if (display_type == &rambus_rambusdisplay_type) {
+            // rambus_rambusdisplay_reset(&displays[i].rambus_display);
+        #endif
         }
     }
 }
@@ -380,6 +397,10 @@ void displayio_gc_collect(void) {
         #if CIRCUITPY_EPAPERDISPLAY
         } else if (display_type == &epaperdisplay_epaperdisplay_type) {
             epaperdisplay_epaperdisplay_collect_ptrs(&displays[i].epaper_display);
+        #endif
+        #if CIRCUITPY_RAMBUS
+        } else if (display_type == &rambus_rambusdisplay_type) {
+            // rambus_rambusdisplay_collect_ptrs(&displays[i].rambus_display);
         #endif
         }
     }

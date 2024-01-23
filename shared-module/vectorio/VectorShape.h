@@ -43,6 +43,7 @@ typedef struct {
 displayio_area_t *vectorio_vector_shape_get_refresh_areas(vectorio_vector_shape_t *self, displayio_area_t *tail);
 
 bool vectorio_vector_shape_get_dirty_area(vectorio_vector_shape_t *self, displayio_area_t *current_dirty_area);
+void screen_to_shape_coordinates(vectorio_vector_shape_t *self, uint16_t x, uint16_t y, int16_t *out_shape_x, int16_t *out_shape_y);
 
 // Area is always in absolute screen coordinates.
 bool vectorio_vector_shape_fill_area(vectorio_vector_shape_t *self, const _displayio_colorspace_t *colorspace, const displayio_area_t *area, uint32_t *mask, uint32_t *buffer);

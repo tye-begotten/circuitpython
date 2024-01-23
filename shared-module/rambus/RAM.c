@@ -8,6 +8,7 @@
 #include "extmod/modtime.h"
 #include "shared-bindings/util.h"
 #include "shared-module/rambus/RAM.h"
+#include "shared-bindings/rambus/RAM.h"
 #include "shared-bindings/digitalio/DigitalInOut.h"
 #include "shared-bindings/digitalio/Direction.h"
 
@@ -16,6 +17,9 @@
 #define __WRITE 0x02
 #define __READ_MODE 0x5
 #define __WRITE_MODE 0x1
+#define __ESDI 0x3b
+#define __ESQI 0x38
+#define __RSTDQI 0xff
 #define __MODE_BYTE 0b00000000
 #define __MODE_PAGE 0b10000000
 #define __MODE_SEQ 0b01000000
@@ -56,6 +60,7 @@ void shared_module_rambus_ram_construct(rambus_ram_obj_t *self, ram_types ram_ty
     shared_module_rambus_ram_end_op(self);
 }
 
+// TODO: rename to deinit for consistency
 void shared_module_rambus_ram_release(rambus_ram_obj_t *self) {
     if (!shared_module_rambus_ram_deinited(self)) {
         common_hal_busio_spi_deinit(self->spi);
@@ -71,7 +76,8 @@ void shared_module_rambus_ram_release(rambus_ram_obj_t *self) {
 }
 
 bool shared_module_rambus_ram_deinited(rambus_ram_obj_t *self) {
-    return common_hal_busio_spi_deinited(self->spi) || 
+    return self == NULL || 
+        common_hal_busio_spi_deinited(self->spi) || 
         common_hal_digitalio_digitalinout_deinited(&self->cs) ||
         common_hal_digitalio_digitalinout_deinited(&self->hold);
 }
@@ -80,6 +86,10 @@ void shared_module_rambus_ram_check_deinit(rambus_ram_obj_t *self) {
     if (shared_module_rambus_ram_deinited(self)) {
         raise_deinited_error();
     }
+}
+
+rambus_ram_obj_t *validate_obj_is_ram(mp_obj_t obj, qstr arg_name) {
+    return MP_OBJ_TO_PTR(mp_arg_validate_type(obj, &rambus_ram_type, arg_name));
 }
 
 addr_t shared_module_rambus_ram_get_size(rambus_ram_obj_t *self) {

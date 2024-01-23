@@ -333,28 +333,24 @@ STATIC mp_obj_t rambus_ram_obj_read_page(size_t n_args, const mp_obj_t *pos_args
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_page_obj, 2, rambus_ram_obj_read_page);
 
 //|     import sys
-//|     def read_seq(self, addr: int, buf: WriteableBuffer = None, start: int = 0) -> None:
+//|     def read_seq(self, addr: int, buf: WriteableBuffer, size: int = -1, start: int = 0) -> None:
 //|         """Read a sequence of bytes from RAM into the given buffer.
 //|
-//|         :param int addr: the 24 bit address to begin reading from
+//|         :param int addr: the address within RAM to begin reading from.
+//|         :param WriteableBuffer buf: The buffer to read into. if no buffer is provided, one will 
+//|                be created based on the size parameter. If size is > 1, the entire RAM contents will be read into a new buffer.
 //|         :param int size: the number of bytes to read from RAM. if no value is provided, the enire RAM will be read.
-//|                if a buffer is provided, the length must be less than or equal to the buffer length.
-//|         :param WriteableBuffer buf: the optional existing buffer to read into. if no buffer is provided, one will 
-//|                be created.
+//|                if a buffer is provided, the length must be less than or equal to the buffer length minus the starting index.
 //|         :param int start: the index to start writing to the provided buffer
-//|         :param int end: the index to end writing to the provided buffer
-//|
-//|         .. note:: If no buffer is provided, a pg_size buffer will be created and returned.
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_addr, ARG_size, ARG_buffer, ARG_start, ARG_end };
+    enum { ARG_addr, ARG_buffer, ARG_size, ARG_start };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_size, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_buffer, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_size, MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_end, MP_ARG_INT, {.u_int = -1} },
     };
     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -362,7 +358,7 @@ STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args,
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, -1, &len);
 
     mp_obj_t result;
     if (bufaddr == NULL) {

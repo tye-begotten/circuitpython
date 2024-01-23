@@ -27,12 +27,21 @@ typedef struct {
     uint8_t cmd[6];
 } rambus_ram_obj_t;
 
+typedef struct {
+    rambus_ram_obj_t *ram;
+    addr_t start;
+    addr_t offset;
+} rambus_ptr_t;
+
 void wait_ns(uint32_t ns);
 
 void shared_module_rambus_ram_construct(rambus_ram_obj_t *self, ram_types ram_type, uint16_t pg_size, uint16_t pg_cnt, uint8_t wrd_size, 
     busio_spi_obj_t *spi, const mcu_pin_obj_t *cs, const mcu_pin_obj_t *hold);
+
 bool shared_module_rambus_ram_deinited(rambus_ram_obj_t *self);
 void shared_module_rambus_ram_check_deinit(rambus_ram_obj_t *self);
+
+rambus_ram_obj_t *validate_obj_is_ram(mp_obj_t obj, qstr arg_name);
 
 addr_t shared_module_rambus_ram_get_size(rambus_ram_obj_t *self);
 addr_t shared_module_rambus_ram_get_start_addr(rambus_ram_obj_t *self);
