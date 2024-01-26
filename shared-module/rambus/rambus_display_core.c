@@ -218,13 +218,13 @@ bool rambus_tilegrid_fill_area(displayio_tilegrid_t *self,
             } else {
                 mask[addr->offset / 32] |= 1 << (addr->offset % 32);
                 if (colorspace->depth == 16) {
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 2);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 2);
                     // *(((uint16_t *)buffer) + offset) = output_pixel.pixel;
                 } else if (colorspace->depth == 32) {
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 4);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 4);
                     // *(((uint32_t *)buffer) + offset) = output_pixel.pixel;
                 } else if (colorspace->depth == 8) {
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 1);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 1);
                     // *(((uint8_t *)buffer) + offset) = output_pixel.pixel;
                 } else if (colorspace->depth < 8) {
                     // Reorder the offsets to pack multiple rows into a byte (meaning they share a column).
@@ -246,7 +246,7 @@ bool rambus_tilegrid_fill_area(displayio_tilegrid_t *self,
                     }
                     shared_px |= output_pixel.pixel << shift;
                     if (addr->offset % pixels_per_byte == 0) {
-                        shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, &shared_px, 1);
+                        rambus_ram_write_seq(addr->ram, addr->start + addr->offset, &shared_px, 1);
                         shared_px = 0;
                     }
                     // ((uint8_t *)buffer)[offset / pixels_per_byte] |= output_pixel.pixel << shift;
@@ -415,15 +415,15 @@ bool rambus_vector_shape_fill_area(vectorio_vector_shape_t *self, const _display
                 *mask_doubleword |= 1u << mask_bit;
                 if (colorspace->depth == 16) {
                     VECTORIO_SHAPE_PIXEL_DEBUG(" buffer = %04x 16", output_pixel.pixel);
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 2);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 2);
                     // *(((uint16_t *)buffer) + pixel_index) = output_pixel.pixel;
                 } else if (colorspace->depth == 32) {
                     VECTORIO_SHAPE_PIXEL_DEBUG(" buffer = %04x 32", output_pixel.pixel);
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 4);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 4);
                     // *(((uint32_t *)buffer) + pixel_index) = output_pixel.pixel;
                 } else if (colorspace->depth == 8) {
                     VECTORIO_SHAPE_PIXEL_DEBUG(" buffer = %02x 8", output_pixel.pixel);
-                    shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 1);
+                    rambus_ram_write_seq(addr->ram, addr->start + addr->offset, (uint8_t*)output_pixel.pixel, 1);
                     // *(((uint8_t *)buffer) + pixel_index) = output_pixel.pixel;
                 } else if (colorspace->depth < 8) {
                     // Reorder the offsets to pack multiple rows into a byte (meaning they share a column).
@@ -440,7 +440,7 @@ bool rambus_vector_shape_fill_area(vectorio_vector_shape_t *self, const _display
                     VECTORIO_SHAPE_PIXEL_DEBUG(" buffer = %2d %d", output_pixel.pixel, colorspace->depth);
                     shared_px |= output_pixel.pixel << shift;
                     if (addr->offset % pixels_per_byte == 0) {
-                        shared_module_rambus_ram_write_seq(addr->ram, addr->start + addr->offset, &shared_px, 1);
+                        rambus_ram_write_seq(addr->ram, addr->start + addr->offset, &shared_px, 1);
                         shared_px = 0;
                     }
                     // ((uint8_t *)buffer)[pixel_index / pixels_per_byte] |= output_pixel.pixel << shift;

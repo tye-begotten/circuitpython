@@ -1,5 +1,4 @@
-#ifndef MICROPY_INCLUDED_SHARED_MODULE_RAMBUS_RAMBUSDISPLAY_H
-#define MICROPY_INCLUDED_SHARED_MODULE_RAMBUS_RAMBUSDISPLAY_H
+#pragma once
 
 #include "py/obj.h"
 #include "py/proto.h"
@@ -59,5 +58,3 @@ void rambus_rambusdisplay_reset(rambus_rambusdisplay_obj_t *self);
 
 void rambus_rambusdisplay_collect_ptrs(rambus_rambusdisplay_obj_t *self);
 
-
-#endif //MICROPY_INCLUDED_SHARED_MODULE_RAMBUS_RAMBUSDISPLAY_H

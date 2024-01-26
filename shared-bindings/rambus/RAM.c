@@ -1,13 +1,6 @@
-#include <stdint.h>
-#include <string.h>
-#include "shared/runtime/context_manager_helpers.h"
+#include "shared-bindings/rambus/__init__.h"
 #include "shared/runtime/buffer_helper.h"
-#include "py/mpprint.h"
 #include "py/binary.h"
-#include "py/objproperty.h"
-#include "py/objarray.h"
-#include "py/runtime.h"
-#include "py/runtime0.h"
 #include "shared-bindings/microcontroller/Pin.h"
 #include "shared-bindings/rambus/RAM.h"
 #include "shared-module/rambus/RAM.h"
@@ -65,18 +58,18 @@ STATIC mp_obj_t rambus_ram_make_new(const mp_obj_type_t *type, size_t n_args, si
     const mcu_pin_obj_t* hold = validate_obj_is_pin(args[ARG_hold].u_obj, MP_QSTR_hold);
 
     rambus_ram_obj_t *self = mp_obj_malloc(rambus_ram_obj_t, &rambus_ram_type);
-    shared_module_rambus_ram_construct(self, RAM_TYPE_SRAM, pg_size, pg_cnt, wrd_size, spi, cs, hold);
+    rambus_ram_construct(self, RAM_TYPE_SRAM, pg_size, pg_cnt, wrd_size, spi, cs, hold);
     return MP_OBJ_FROM_PTR(self);
 }
 
 //|     def deinit(self) -> None:
 //|         """Deinitialises the RAM and releases any hardware resources for reuse."""
 //|         ...
-STATIC mp_obj_t rambus_ram_deinit(mp_obj_t self_in) {
-    shared_module_rambus_ram_release(self_in);
+STATIC mp_obj_t rambus_ram_obj_deinit(mp_obj_t self_in) {
+    rambus_ram_deinit(self_in);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_deinit_obj, rambus_ram_deinit);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_deinit_obj, rambus_ram_obj_deinit);
 
 //|     def __enter__(self) -> RAM:
 //|         """No-op used by Context Managers."""
@@ -97,7 +90,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(rambus_ram___exit___obj, 4, 4, rambus
 //|     """Indicates which mode the RAM is operating in. May differ per hardware implementation.
 //|     """
 STATIC mp_obj_t rambus_ram_obj_get_mode(mp_obj_t self_in) {
-    return mp_obj_new_int_from_uint(shared_module_rambus_ram_get_mode(self_in));
+    return mp_obj_new_int_from_uint(rambus_ram_get_mode(self_in));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_mode_obj, rambus_ram_obj_get_mode);
 MP_PROPERTY_GETTER(rambus_ram_mode_obj, (mp_obj_t)&rambus_ram_get_mode_obj);
@@ -106,7 +99,7 @@ MP_PROPERTY_GETTER(rambus_ram_mode_obj, (mp_obj_t)&rambus_ram_get_mode_obj);
 //|     """32 bit value indicating the total capacity of the RAM in bytes.
 //|     """
 STATIC mp_obj_t rambus_ram_obj_get_size(mp_obj_t self_in) {
-    return mp_obj_new_int_from_uint(shared_module_rambus_ram_get_size(self_in));
+    return mp_obj_new_int_from_uint(rambus_ram_get_size(self_in));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_size_obj, rambus_ram_obj_get_size);
 MP_PROPERTY_GETTER(rambus_ram_size_obj, (mp_obj_t)&rambus_ram_get_size_obj);
@@ -115,7 +108,7 @@ MP_PROPERTY_GETTER(rambus_ram_size_obj, (mp_obj_t)&rambus_ram_get_size_obj);
 //|     """The start address of read/write RAM, normally 0x000000.
 //|     """
 STATIC mp_obj_t rambus_ram_obj_get_start_addr(mp_obj_t self_in) {
-    return mp_obj_new_int_from_uint(shared_module_rambus_ram_get_start_addr(self_in));
+    return mp_obj_new_int_from_uint(rambus_ram_get_start_addr(self_in));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_start_addr_obj, rambus_ram_obj_get_start_addr);
 MP_PROPERTY_GETTER(rambus_ram_start_addr_obj, (mp_obj_t)&rambus_ram_get_start_addr_obj);
@@ -124,14 +117,14 @@ MP_PROPERTY_GETTER(rambus_ram_start_addr_obj, (mp_obj_t)&rambus_ram_get_start_ad
 //|     """The end address of read/write RAM, normally start_addr + size.
 //|     """
 STATIC mp_obj_t rambus_ram_obj_get_end_addr(mp_obj_t self_in) {
-    return mp_obj_new_int_from_uint(shared_module_rambus_ram_get_end_addr(self_in));
+    return mp_obj_new_int_from_uint(rambus_ram_get_end_addr(self_in));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_end_addr_obj, rambus_ram_obj_get_end_addr);
 MP_PROPERTY_GETTER(rambus_ram_end_addr_obj, (mp_obj_t)&rambus_ram_get_end_addr_obj);
 
 STATIC addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args) {
-    return (addr_t)mp_arg_validate_int_range(args[arg].u_int, shared_module_rambus_ram_get_start_addr(self), 
-        shared_module_rambus_ram_get_end_addr(self), arg);
+    return (addr_t)mp_arg_validate_int_range(args[arg].u_int, rambus_ram_get_start_addr(self), 
+        rambus_ram_get_end_addr(self), arg);
 }
 
 STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out) {
@@ -165,8 +158,8 @@ STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_
 //|     def write_byte(self, addr: int, data: int) -> None:
 //|         """Write the data byte to RAM at the given address.
 //|
-//|         :param int addr: the 24 bit address to write to
-//|         :param int ReadableBuffer: the wrd_size data to write
+//|         :param int addr: the address within RAM to write to
+//|         :param int data: the wrd_size data to write
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_write_byte(size_t n_args, const mp_obj_t *pos_args) {
@@ -182,12 +175,12 @@ STATIC mp_obj_t rambus_ram_obj_write_byte(size_t n_args, const mp_obj_t *pos_arg
     addr_t addr = check_addr(self, ARG_addr, args);
     uint8_t data = (uint8_t)mp_arg_validate_int_range(args[ARG_data].u_int, 0, 255, ARG_data);
 
-    shared_module_rambus_ram_write_byte(self, addr, data);
+    rambus_ram_write_byte(self, addr, data);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(rambus_ram_write_byte_obj, 3, 3, rambus_ram_obj_write_byte);
 
-//|     def write_page(self, addr: int, data: int) -> None:
+//|     def write_page(self, addr: int, data: ReadableBuffer) -> None:
 //|         """Write the data page to RAM at the given address.
 //|
 //|         :param int addr: the 24 bit address to write to
@@ -209,7 +202,7 @@ STATIC mp_obj_t rambus_ram_obj_write_page(size_t n_args, const mp_obj_t *pos_arg
     uint8_t *data = check_buffer(self, MP_BUFFER_READ, ARG_data, args, 0, -1, &len);
 
     if (data != NULL) {
-        shared_module_rambus_ram_write_page(self, addr, data, len);
+        rambus_ram_write_page(self, addr, data, len);
     } else {
         mp_printf(&mp_plat_print, "Writing page to addr %x received no data!\n", addr);
     }
@@ -218,7 +211,7 @@ STATIC mp_obj_t rambus_ram_obj_write_page(size_t n_args, const mp_obj_t *pos_arg
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(rambus_ram_write_page_obj, 3, 3, rambus_ram_obj_write_page);
 
-//|     def write_seq(self, addr: int, data: int) -> None:
+//|     def write_seq(self, addr: int, data: ReadableBuffer, *, start: int, end: int) -> None:
 //|         """Write the sequence of data to RAM at the given address.
 //|
 //|         :param int addr: the 24 bit address to write to
@@ -232,8 +225,8 @@ STATIC mp_obj_t rambus_ram_obj_write_seq(size_t n_args, const mp_obj_t *pos_args
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
         { MP_QSTR_data, MP_ARG_REQUIRED | MP_ARG_OBJ },
-        { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_end, MP_ARG_INT, {.u_int = -1} },
+        { MP_QSTR_start, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
+        { MP_QSTR_end, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
     };
     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -244,7 +237,7 @@ STATIC mp_obj_t rambus_ram_obj_write_seq(size_t n_args, const mp_obj_t *pos_args
     uint8_t *data = check_buffer(self, MP_BUFFER_READ, ARG_data, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
 
     if (data != NULL) {
-        shared_module_rambus_ram_write_seq(self, addr, data, len);
+        rambus_ram_write_seq(self, addr, data, len);
     } else {
         mp_printf(&mp_plat_print, "Writing seq to addr %x received no data!\n", addr);
     }
@@ -254,7 +247,7 @@ STATIC mp_obj_t rambus_ram_obj_write_seq(size_t n_args, const mp_obj_t *pos_args
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_write_seq_obj, 3, rambus_ram_obj_write_seq);
 
 //|     import sys
-//|     def read_byte(self, addr: int, buf: WriteableBuffer = None, start: int = 0) -> int:
+//|     def read_byte(self, addr: int, *, buf: WriteableBuffer = None, start: int = 0) -> int:
 //|         """Read the data byte from RAM at the given address.
 //|
 //|         Returns an int between 0-255.
@@ -268,11 +261,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_write_seq_obj, 3, rambus_ram_obj_wr
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_read_byte(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_addr, ARG_buffer, ARG_start };
+    enum { ARG_addr, ARG_buf, ARG_start };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_buffer, MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_buf, MP_ARG_OBJ | MP_ARG_KW_ONLY, {.u_obj = mp_const_none} },
+        { MP_QSTR_start, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
     };
     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -280,14 +273,14 @@ STATIC mp_obj_t rambus_ram_obj_read_byte(size_t n_args, const mp_obj_t *pos_args
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, 0, -1, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buf, args, 0, -1, &len);
     // MP_OBJ_NEW_SMALL_INT()
-    return mp_obj_new_int_from_uint(shared_module_rambus_ram_read_byte(self, addr, bufaddr, 0));
+    return mp_obj_new_int_from_uint(rambus_ram_read_byte(self, addr, bufaddr, 0));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_byte_obj, 2, rambus_ram_obj_read_byte);
 
 //|     import sys
-//|     def read_page(self, addr: int, buf: WriteableBuffer = None, start: int = 0) -> None:
+//|     def read_page(self, addr: int, *, buf: WriteableBuffer = None, start: int = 0) -> None:
 //|         """Read a page of bytes from RAM into the given buffer.
 //|
 //|         :param int addr: the 24 bit address to begin reading from
@@ -299,12 +292,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_byte_obj, 2, rambus_ram_obj_re
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_read_page(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_addr, ARG_buffer, ARG_start, ARG_end };
+    enum { ARG_addr, ARG_buf, ARG_start, ARG_end };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_buffer, MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_end, MP_ARG_INT, {.u_int = -1} },
+        { MP_QSTR_buf, MP_ARG_OBJ | MP_ARG_KW_ONLY, {.u_obj = mp_const_none} },
+        { MP_QSTR_start, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
+        { MP_QSTR_end, MP_ARG_INT| MP_ARG_KW_ONLY, {.u_int = -1} },
     };
     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -312,7 +305,7 @@ STATIC mp_obj_t rambus_ram_obj_read_page(size_t n_args, const mp_obj_t *pos_args
 
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buf, args, args[ARG_start].u_int, args[ARG_end].u_int, &len);
 
     mp_obj_t result;
     if (bufaddr == NULL) {
@@ -323,17 +316,17 @@ STATIC mp_obj_t rambus_ram_obj_read_page(size_t n_args, const mp_obj_t *pos_args
         mp_get_buffer_raise(result, &bufinfo, MP_BUFFER_READ);
         bufaddr = (uint8_t*)bufinfo.buf;
     } else {
-        result = args[ARG_buffer].u_obj;
+        result = args[ARG_buf].u_obj;
     }
 
-    shared_module_rambus_ram_read_page(self, addr, bufaddr, len);
+    rambus_ram_read_page(self, addr, bufaddr, len);
 
     return result;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_page_obj, 2, rambus_ram_obj_read_page);
 
 //|     import sys
-//|     def read_seq(self, addr: int, buf: WriteableBuffer, size: int = -1, start: int = 0) -> None:
+//|     def read_seq(self, addr: int, *, buf: WriteableBuffer, size: int = -1, start: int = 0) -> None:
 //|         """Read a sequence of bytes from RAM into the given buffer.
 //|
 //|         :param int addr: the address within RAM to begin reading from.
@@ -345,26 +338,25 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_page_obj, 2, rambus_ram_obj_re
 //|         """
 //|         ...
 STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_addr, ARG_buffer, ARG_size, ARG_start };
+    enum { ARG_addr, ARG_buf, ARG_size, ARG_start };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
-        { MP_QSTR_buffer, MP_ARG_OBJ, {.u_obj = mp_const_none} },
-        { MP_QSTR_size, MP_ARG_INT, {.u_int = -1} },
-        { MP_QSTR_start, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_buf, MP_ARG_OBJ | MP_ARG_KW_ONLY, {.u_obj = mp_const_none} },
+        { MP_QSTR_size, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
+        { MP_QSTR_start, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
     };
     rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-
     addr_t addr = check_addr(self, ARG_addr, args);
     size_t len = 0;
-    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buffer, args, args[ARG_start].u_int, -1, &len);
+    uint8_t *bufaddr = check_buffer(self, MP_BUFFER_WRITE, ARG_buf, args, args[ARG_start].u_int, 0, &len);
 
     mp_obj_t result;
     if (bufaddr == NULL) {
         len = (addr_t)args[ARG_size].u_int;
-        if (len < 1) {
-            len = shared_module_rambus_ram_get_size(self);
+        if (len < 1) { 
+            len = rambus_ram_get_size(self);
         }
         // alloc new buffer
         result = mp_obj_new_bytearray_of_zeros(len);
@@ -374,17 +366,92 @@ STATIC mp_obj_t rambus_ram_obj_read_seq(size_t n_args, const mp_obj_t *pos_args,
     } else {
         // If a buffer was provided AND a length was specified, try to read that length into the buffer.
         // If that length is outside the buffer bounds, ignore it and read the buffer length.
-        if ((size_t)args[ARG_size].u_int < len) {
+        if (args[ARG_size].u_int > 0 && (size_t)args[ARG_size].u_int < len) {
             len = (size_t)args[ARG_size].u_int;
         }
-        result = args[ARG_buffer].u_obj;
+        result = args[ARG_buf].u_obj;
     }
 
-    shared_module_rambus_ram_read_seq(self, addr, bufaddr, len);
+    rambus_ram_read_seq(self, addr, bufaddr, len);
 
     return result;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_read_seq_obj, 2, rambus_ram_obj_read_seq);
+
+//|     def exec_cmd(self, cmd: int, addr: int, *, data: int = -1, extra_cycles: int = 0) -> None:
+//|         """Read a sequence of bytes from RAM into the given buffer.
+//|
+//|         :param int cmd: the 8bit command to write to RAM. 
+//|         :param int addr: the 8-32bit address within RAM to execute the command.
+//|         :param int data: the optional 8bit data byte to include after the address.
+//|         :param int extra_cycles: the optional number of additional clock cycles to run after 
+//|         executing the command.
+//|         """
+//|         ...
+STATIC mp_obj_t rambus_ram_obj_exec_cmd(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    enum { ARG_cmd, ARG_addr, ARG_data, ARG_extra_cycles };
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_cmd, MP_ARG_REQUIRED | MP_ARG_INT },
+        { MP_QSTR_addr, MP_ARG_REQUIRED | MP_ARG_INT },
+        { MP_QSTR_data, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = -1} },
+        { MP_QSTR_extra_cycles, MP_ARG_INT | MP_ARG_KW_ONLY, {.u_int = 0} },
+    };
+    rambus_ram_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    uint8_t cmd = get_byte(args, ARG_cmd, MP_QSTR_cmd);
+    uint8_t len = 4 + args[ARG_extra_cycles].u_int;
+    uint8_t data = 0;
+    if (try_get_byte(args, ARG_data, &data)) {
+        len++;
+    }
+
+    addr_t addr = mp_arg_validate_int_range(args[ARG_addr].u_int + len, rambus_ram_get_start_addr(self), rambus_ram_get_end_addr(self), MP_QSTR_addr);
+
+    printlf("exec_cmd: %d, addr: %x, data: %d, len: %d", cmd, addr, data, len);
+
+    bool ok = rambus_ram_exec_cmd(self, cmd, addr, data, len);
+    return mp_obj_new_bool(ok);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(rambus_ram_exec_cmd_obj, 2, rambus_ram_obj_exec_cmd);
+
+
+//|     def begin_op(self, mode: int = None) -> None:
+//|         """Begins an operation on the RAM, locking it's bus and setting the RAM to the 
+//|         provided data mode. 
+//|
+//|     .. note:: end_op must be called on the RAM after all data operations are finished
+//|         or the RAM will remain locked and unusable.
+//|
+//|         :param int mode: the optional 8bit mode to set the RAM to before beginning the operation.
+//|         if no mode is sent, the RAM will remain in it's current mode.
+//|         """
+//|         ...
+STATIC mp_obj_t rambus_ram_obj_begin_op(mp_obj_t self_in, mp_obj_t mode_in) {
+    rambus_ram_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    uint8_t mode = __MODE_NONE;
+    try_to_byte(mp_obj_get_int(mode_in), &mode);
+
+    printlf("begin_op got mode %d", mode);
+
+    rambus_ram_begin_op(self, mode);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(rambus_ram_begin_op_obj, rambus_ram_obj_begin_op);
+
+//|     def end_op(self, mode: int = None) -> None:
+//|         """Ends any open operation on the RAM, unlocking it's bus and enabling it for further operations.
+//|         """
+//|         ...
+STATIC mp_obj_t rambus_ram_obj_end_op(mp_obj_t self_in) {
+    rambus_ram_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    rambus_ram_end_op(self);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_end_op_obj, rambus_ram_obj_end_op);
 
 
 STATIC const mp_rom_map_elem_t rambus_ram_locals_dict_table[] = {
@@ -401,6 +468,9 @@ STATIC const mp_rom_map_elem_t rambus_ram_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_read_byte), MP_ROM_PTR(&rambus_ram_read_byte_obj) },
     { MP_ROM_QSTR(MP_QSTR_read_page), MP_ROM_PTR(&rambus_ram_read_page_obj) },
     { MP_ROM_QSTR(MP_QSTR_read_seq), MP_ROM_PTR(&rambus_ram_read_seq_obj) },
+    { MP_ROM_QSTR(MP_QSTR_exec_cmd), MP_ROM_PTR(&rambus_ram_exec_cmd_obj) },
+    { MP_ROM_QSTR(MP_QSTR_begin_op), MP_ROM_PTR(&rambus_ram_begin_op_obj) },
+    { MP_ROM_QSTR(MP_QSTR_end_op), MP_ROM_PTR(&rambus_ram_end_op_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(rambus_ram_locals_dict, rambus_ram_locals_dict_table);
 

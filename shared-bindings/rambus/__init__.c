@@ -1,7 +1,4 @@
 
-
-#include "py/runtime.h"
-
 #include "shared-bindings/rambus/__init__.h"
 #include "shared-bindings/rambus/RAM.h"
 #include "shared-bindings/rambus/RAMBusDisplay.h"
@@ -20,3 +17,25 @@ const mp_obj_module_t rambus_module = {
 };
 
 MP_REGISTER_MODULE(MP_QSTR_rambus, rambus_module);
+
+
+uint8_t get_byte(mp_arg_val_t *args, int arg_pos, qstr arg_name) {
+    return to_byte(args[arg_pos].u_int, arg_name);
+}
+
+uint8_t to_byte(mp_int_t n, qstr arg_name) {
+    return (uint8_t)mp_arg_validate_int_range(n, 0, 255, arg_name);
+}
+
+bool try_get_byte(mp_arg_val_t *args, int arg_pos, uint8_t *output) {
+    return try_to_byte(args[arg_pos].u_int, output);
+}
+
+bool try_to_byte(mp_int_t n, uint8_t *output) {
+    if (n < 0 || n > 255) {
+        return false;
+    } else {
+        *output = (uint8_t)n;
+        return true;
+    }
+}

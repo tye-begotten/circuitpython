@@ -64,7 +64,7 @@ STATIC mp_obj_t displayio_rambusbitmap_make_new(const mp_obj_type_t *type, size_
     uint32_t height = mp_arg_validate_int_range(args[ARG_height].u_int, 0, 32767, MP_QSTR_height);
     uint32_t value_count = mp_arg_validate_int_range(args[ARG_value_count].u_int, 1, 65536, MP_QSTR_value_count);
     rambus_ram_obj_t *ram = MP_OBJ_TO_PTR(args[ARG_ram].u_obj);
-    addr_t addr = mp_arg_validate_int_range(args[ARG_addr].u_int, 0, shared_module_rambus_ram_get_size(ram), MP_QSTR_addr);
+    addr_t addr = mp_arg_validate_int_range(args[ARG_addr].u_int, 0, rambus_ram_get_size(ram), MP_QSTR_addr);
     pyb_file_obj_t *file = NULL;
 
     if (args[ARG_file].u_obj != mp_const_none) {

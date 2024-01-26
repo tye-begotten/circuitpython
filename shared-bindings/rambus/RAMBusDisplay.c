@@ -107,7 +107,7 @@ STATIC mp_obj_t rambus_rambusdisplay_make_new(const mp_obj_type_t *type, size_t 
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
     rambus_ram_obj_t *ram = validate_obj_is_ram(args[ARG_ram].u_obj, MP_QSTR_ram);
-    addr_t ram_size = shared_module_rambus_ram_get_size(ram);
+    addr_t ram_size = rambus_ram_get_size(ram);
     uint32_t addr = args[ARG_addr].u_int;
     uint32_t width = args[ARG_width].u_int;
     uint32_t height = args[ARG_height].u_int;
@@ -128,8 +128,8 @@ STATIC mp_obj_t rambus_rambusdisplay_make_new(const mp_obj_type_t *type, size_t 
     primary_display_t *disp = allocate_display_or_raise();
     rambus_rambusdisplay_obj_t *self = &disp->rambus_display;
 
-    printfl("got rambusdisplay obj: %s", self);
-    
+    printlf("got rambusdisplay obj: %s", self);
+
     self->base.type = &rambus_rambusdisplay_type;
     rambus_rambusdisplay_construct(
         self,

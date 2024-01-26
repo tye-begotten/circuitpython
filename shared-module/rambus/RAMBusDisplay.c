@@ -57,7 +57,7 @@ void rambus_rambusdisplay_construct(rambus_rambusdisplay_obj_t *self,
     self->addr->offset = 0;
     // self->display_bus = display_bus;
 
-    printfl("Creating RAMBusDisplay %dx%d using RAM addr %x", width, height, addr);
+    printlf("Creating RAMBusDisplay %dx%d using RAM addr %x", width, height, addr);
 
     displayio_display_core_construct(
         &self->core,
@@ -128,7 +128,7 @@ STATIC const displayio_area_t *_get_refresh_areas(rambus_rambusdisplay_obj_t *se
 }
 
 STATIC const bool _deinited(rambus_rambusdisplay_obj_t *self) {
-    return shared_module_rambus_ram_deinited(self->ram);
+    return rambus_ram_deinited(self->ram);
 }
 
 #define MARK_ROW_DIRTY(r) (dirty_row_bitmask[r / 8] |= (1 << (r & 7)))
@@ -293,7 +293,7 @@ uint16_t rambus_rambusdisplay_get_rotation(rambus_rambusdisplay_obj_t *self) {
 
 
 bool rambus_rambusdisplay_refresh(rambus_rambusdisplay_obj_t *self, uint32_t target_ms_per_frame, uint32_t maximum_ms_per_real_frame) {
-    printl("refreshing RAMBusDisplay");
+    // printl("refreshing RAMBusDisplay");
     if (!self->auto_refresh && !self->first_manual_refresh && (target_ms_per_frame != NO_FPS_LIMIT)) {
         uint64_t current_time = supervisor_ticks_ms64();
         uint32_t current_ms_since_real_refresh = current_time - self->core.last_refresh;
@@ -352,7 +352,7 @@ void release_rambusdisplay(rambus_rambusdisplay_obj_t *self) {
     rambus_rambusdisplay_set_auto_refresh(self, false);
     release_display_core(&self->core);
     if (self->ram != NULL) {
-        shared_module_rambus_ram_release(self->ram);
+        rambus_ram_deinit(self->ram);
     }
     // free(self->addr);
     self->base.type = &mp_type_NoneType;

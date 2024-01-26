@@ -29,7 +29,7 @@
 //     }
 
 // void rambusframebuffer_framebuffer_deinit(rambus_framebuffer_obj_t *self) {
-//     shared_module_rambus_ram_release(self->ram);
+//     shared_module_rambus_ram_deinit(self->ram);
 // }
 
 // bool rambusframebuffer_framebuffer_deinitialized(rambus_framebuffer_obj_t *self) {
