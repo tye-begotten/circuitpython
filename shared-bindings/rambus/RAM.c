@@ -122,38 +122,38 @@ STATIC mp_obj_t rambus_ram_obj_get_end_addr(mp_obj_t self_in) {
 MP_DEFINE_CONST_FUN_OBJ_1(rambus_ram_get_end_addr_obj, rambus_ram_obj_get_end_addr);
 MP_PROPERTY_GETTER(rambus_ram_end_addr_obj, (mp_obj_t)&rambus_ram_get_end_addr_obj);
 
-STATIC addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args) {
-    return (addr_t)mp_arg_validate_int_range(args[arg].u_int, rambus_ram_get_start_addr(self), 
-        rambus_ram_get_end_addr(self), arg);
-}
+// STATIC addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args) {
+//     return (addr_t)mp_arg_validate_int_range(args[arg].u_int, rambus_ram_get_start_addr(self), 
+//         rambus_ram_get_end_addr(self), arg);
+// }
 
-STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out) {
-    if (args[arg].u_obj == mp_const_none) {
-        return NULL;
-    }
+// STATIC uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out) {
+//     if (args[arg].u_obj == mp_const_none) {
+//         return NULL;
+//     }
 
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args[arg].u_obj, &bufinfo, buf_type);
-    // Compute bounds in terms of elements, not bytes.
-    int stride_in_bytes = mp_binary_get_size('@', bufinfo.typecode, NULL);
-    size_t length = bufinfo.len / stride_in_bytes;
-    if (end < 1) {
-        normalize_buffer_bounds(&start, length, &length);
-    } else {
-        normalize_buffer_bounds(&start, end, &length);
-    }
+//     mp_buffer_info_t bufinfo;
+//     mp_get_buffer_raise(args[arg].u_obj, &bufinfo, buf_type);
+//     // Compute bounds in terms of elements, not bytes.
+//     int stride_in_bytes = mp_binary_get_size('@', bufinfo.typecode, NULL);
+//     size_t length = bufinfo.len / stride_in_bytes;
+//     if (end < 1) {
+//         normalize_buffer_bounds(&start, length, &length);
+//     } else {
+//         normalize_buffer_bounds(&start, end, &length);
+//     }
 
-    // Treat start and length in terms of bytes from now on.
-    start *= stride_in_bytes;
-    length *= stride_in_bytes;
+//     // Treat start and length in terms of bytes from now on.
+//     start *= stride_in_bytes;
+//     length *= stride_in_bytes;
 
-    if (length == 0) {
-        return NULL;
-    } else {
-        *len_out = length;
-        return ((uint8_t *)bufinfo.buf) + start;
-    }
-}
+//     if (length == 0) {
+//         return NULL;
+//     } else {
+//         *len_out = length;
+//         return ((uint8_t *)bufinfo.buf) + start;
+//     }
+// }
 
 //|     def write_byte(self, addr: int, data: int) -> None:
 //|         """Write the data byte to RAM at the given address.

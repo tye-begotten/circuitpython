@@ -18,3 +18,6 @@ uint8_t to_byte(mp_int_t n, qstr arg_name);
 bool try_to_byte(mp_int_t n, uint8_t *output);
 uint8_t get_byte(mp_arg_val_t *args, int arg_pos, qstr arg_name);
 bool try_get_byte(mp_arg_val_t *args, int arg_pos, uint8_t *output);
+
+uint8_t* check_buffer(rambus_ram_obj_t *self, int buf_type, qstr arg, mp_arg_val_t *args, int32_t start, int32_t end, size_t *len_out);
+addr_t check_addr(rambus_ram_obj_t *self, qstr arg, mp_arg_val_t *args);
